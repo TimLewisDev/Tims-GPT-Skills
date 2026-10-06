@@ -105,9 +105,8 @@ In **standalone** mode there are no work units: a task goes `Todo` →
 - **From a Task Breakdown** (called by `tims-task-breakdown`): write the full
   template. Every unit and task is `Todo`, every board row is filled from the
   breakdown's Work Units and Task Map, and Resume Here points at the first unit.
-  Name and place it per the breakdown (`<Prefix> - Task Status.md` or
-  `STAR-XXXXX.status.md`), matching the sibling documents' header or tag block
-  and link style.
+  Name and place it per the breakdown (`<Prefix> - Task Status.md`), matching
+  the sibling documents' header or tag block and link style.
 - **Standalone, from a plan** (called by `tims-implementation-agent` when there
   is no breakdown): write the minimal variant. Its tasks are the plan's steps,
   numbered as the plan numbers them. Put it beside the plan. Confirm the
@@ -200,18 +199,6 @@ A short resume summary:
   engineer;
 - the next action, from Resume Here.
 
-## Older documents
-
-Recognise an older Task Status doc by its structure, not its date: it links a
-**Testing Framework** doc, and its Step Log entries have **Validation
-Performed** instead of **Validation** and no **To validate**. Accept it as it
-is:
-
-- leave the Testing Framework link in place; that doc is no longer updated;
-- don't rewrite old entries. When you next write to an old entry, keep its
-  **Validation Performed** field name and add **To validate** beneath it. New
-  entries use the current template.
-
 ## Templates
 
 ### Task Status (from a Task Breakdown)
@@ -234,7 +221,7 @@ is:
 1. Read this document, then <unit ID> and its cards in <Task Breakdown link>.
 2. Reconcile: expect branch `<branch>`; <files expected on disk, or none>.
 3. Waiting on the engineer: <checks or decisions, or nothing>.
-4. Next action: <one concrete action, e.g. "Start T08 — Hull resolution (Agent)" or "Validate WU3 (Agent + Engineer)">.
+4. Next action: <one concrete action, e.g. "Start T08 — Load saved settings (Agent)" or "Validate WU3 (Agent + Engineer)">.
 
 **Documents:** Comprehensive tech plan <link> · Task Breakdown <link> · Repo `<path>`
 

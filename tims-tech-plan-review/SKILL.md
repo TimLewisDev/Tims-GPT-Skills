@@ -25,18 +25,13 @@ metadata:
 /tims-tech-plan-review [tech plan] [comprehensive tech plan]
 ```
 
-- Both paths are optional, and can come in either order. One is enough if its
-  header links the other.
+- Both paths are optional, and can come in either order. One is enough if it
+  links the other (in its header or its opening note).
 - With no paths, ask one question and wait: "Which plan are we reviewing? Paste
   the Tech Plan or the Comprehensive Tech Plan path."
 - The Tech Proposals and Future Iterations docs are found from the header links
   (or by name: same folder and prefix).
 - If the comprehensive plan can't be found, ask for it and stop.
-- An older plan (written before 2026-10-05) is a *Tech Plan + Feature
-  Consensus* pair: a Tech Plan with no `Revision` or Change Log, next to a
-  `Feature Consensus` doc, and no Comprehensive Tech Plan. Recognise it by that
-  structure, not by date. Tell the engineer this skill needs the newer format,
-  and stop.
 
 ## Role
 
@@ -66,7 +61,8 @@ everywhere it applies, and nothing else.
 - **When the engineer is vague**, propose concrete wording for them to accept or
   adjust, rather than asking an open question back.
 - **Talking never changes anything.** Only a confirmed change set writes to a
-  document.
+  document. (The one exception, writing an `Open` proposal so the engineer can
+  read it before choosing, is in step 5 of the Amendment procedure.)
 - **Follow redirects at any time**: "skip to step 6", "go back", "let's look at
   P15", "done". Remember where a walkthrough was, so you can return to it.
 
@@ -78,8 +74,8 @@ Read, without commentary:
 
 - the comprehensive plan in full, then the Tech Plan, then the Tech Proposals
   and Future Iterations docs;
-- if a Task Breakdown sits beside the plan (`<Prefix> - Task Breakdown.md` or
-  `STAR-XXXXX.tasks.md`), it and its Task Status doc, read-only.
+- if a Task Breakdown sits beside the plan (`<Prefix> - Task Breakdown.md`),
+  it and its Task Status doc, read-only.
 
 Work out:
 
@@ -89,7 +85,13 @@ Work out:
 - **breakdown:** progress, which tasks and units cite which plan IDs, and which
   are already `Implemented` or `Done`;
 - **base branch:** for any repo fact checked later. When one needs checking,
-  `git fetch` first and check it on `origin/<base>`, not in the working tree.
+  `git fetch` first (it only updates remote-tracking refs) and check it on
+  `origin/<base>`. If a breakdown is under way, also check the current branch,
+  since work there may already implement the item being changed.
+
+If there's a Task Breakdown but no Task Status doc, say so in the orientation:
+progress and which tasks are `Implemented` or `Done` are unknown. Use the
+breakdown's tasks and units alone for impact.
 
 ### 2. Orient
 
@@ -121,18 +123,26 @@ they mean.
 
 ### 4. The review loop
 
-Run the chosen path. Whenever a path item finishes (a change applied, a
-question answered, a proposal settled, a section reviewed), ask in one short
-chat line what's next. For example: "Carry on to Key decisions, make another
-change, look at the open proposals, ask something, or are we done?" Use chat
-here, not `AskUserQuestion`, so "done" is always an option.
+Run the chosen path. When a **path** finishes, ask in one short chat line
+what's next. A path finishes when the walkthrough reaches its end, a change or
+question made outside the walkthrough is done, or the open proposals have all
+been seen. For example: "Make another change, look at the open proposals, ask
+something, or are we done?" Use chat here, not `AskUserQuestion`, so "done" is
+always an option.
+
+Inside a path, don't ask "what's next": carry straight on. After "move on",
+show the next section; after a change or a question in the middle of the
+walkthrough, return to the same section's prompt; after one proposal, show the
+next.
 
 #### Section walkthrough
 
 - Go through the Tech Plan's sections in order: In one paragraph, Scope, Key
   decisions, How it will be built, Footprint, Risks to watch, Open for review.
 - For each section: show its lines, then ask "Anything here to change, anything
-  to ask, or shall we move on?"
+  to ask, or shall we move on?" If a section is long (more than about eight
+  lines, e.g. Scope), show it in its groups (In, then Out) or in chunks of a
+  few lines, asking after each.
 - If the engineer asks about a line, expand it from the comprehensive-plan IDs it
   cites: the requirement's full text, the step's Work and Done when, the
   rejected alternatives.
@@ -150,10 +160,12 @@ here, not `AskUserQuestion`, so "done" is always an option.
   - what's applied in the plan now, and the recommendation;
   - a link to the proposal's section, for the full comparison.
 - Ask: confirm it, pick another option, leave it open, or skip.
-  - **Confirm**: decide the proposal in place through `tims-tech-proposals`
-    (status `Decided`, with who, when and why). Update the Tech Plan's **Open
-    for review** through `tims-tech-plan` Update mode. The plan's meaning
-    doesn't change, so the revision doesn't either.
+  - **Confirm**: ask once why (or record "confirmed the default; no reason
+    given"), then decide the proposal in place through `tims-tech-proposals`
+    (status `Decided`, with who, when and why). Update the Tech Plan through
+    `tims-tech-plan` Update mode: the item leaves **Open for review** and its
+    `NB` moves to **Key decisions**. The plan's meaning doesn't change, so the
+    revision doesn't either.
   - **Pick another**: a decision change. Run the **Amendment procedure**.
   - **Leave open / skip**: nothing changes. Move to the next one.
 
@@ -181,6 +193,8 @@ look at), summarise:
 - the documents that changed;
 - if a Task Breakdown exists: run `/tims-task-breakdown continue <task status
   doc>` next, which will flag the Change Log rows that affect the current unit.
+  (If it has no Task Status doc, say so: the breakdown hasn't been started, and
+  its cards should be checked against this revision before it is.)
 
 ## Session revision
 
@@ -205,7 +219,9 @@ waits for the end of the session, so nothing is lost if it ends early.
 Changes come in conversation. The engineer may quote either document, name an ID
 (`R15`, `§6`, `NB3`, `P2`), or describe the change in plain words. Work **one
 change at a time**. If the engineer gives several at once, list them back, then
-take them in order.
+take them in order. If they retract or replace a request before it's confirmed
+("no, scrap that"), drop it, say in one line what you dropped, and carry on
+with what they want instead.
 
 For each change:
 
@@ -221,27 +237,39 @@ For each change:
 3. **Cross-check.** Compare the result against the whole plan. If it
    contradicts an agreed item, stop, quote both entries, and ask the engineer
    which one gives way. A plain answer ("drop the old rationale") is applied as
-   part of this change. If settling it means choosing between real alternatives
-   with tradeoffs, or it's on the Critical Decisions list, take it to step 5 as
-   a proposal instead.
+   part of this change; that is not a Critical Decision. Only if settling it
+   means choosing between real alternatives with tradeoffs does it go to step 5
+   as a proposal.
 4. **Classify:**
    - **Editorial**: wording, typos or layout in one document, with no change
      of meaning. Apply it to that document alone, with no amendment note and no
      revision change. If you can't be sure the meaning is unchanged, treat it
      as substantive.
    - **Substantive**: changes what an item says (a requirement, scope line,
-     constraint, step, Done when, file).
-   - **Decision change**: changes or reopens a decision (`A`, `CD`, `NB`), or the
-     change is itself a Critical Decision.
-5. **Escalate decisions.** For a decision change, or anything on the Critical
-   Decisions list below:
-   - ground the options in the repo on the base branch, citing `path:line`;
-   - write the proposal through `tims-tech-proposals` (supersede a `Decided`
-     one; decide a `Default applied` one in place);
-   - ask with `AskUserQuestion`, recommended first, pointing at the proposal;
-   - continue with the chosen option.
+     constraint, step, Done when, file). Updating the details of a decision
+     without changing which option was chosen (renaming the menu path an `NB`
+     applies, say) is substantive, not a decision change.
+   - **Decision change**: swaps the chosen option of a decision that was made
+     between alternatives (`A`, `CD`, `NB`, or an `R`/`S`/`C` with a proposal),
+     or the change opens a new choice between real alternatives with tradeoffs.
+5. **Settle decisions.** For a decision change:
+   - **If the engineer has already named the option they want**, that is the
+     decision. Don't ask again whether to do it. Ask only about *how*, if there
+     is a real choice there.
+   - **Otherwise**, ground the options in the repo on the base branch (citing
+     `path:line`), show them in chat (the question, one line per option, the
+     recommendation), and ask with `AskUserQuestion`, recommended first.
+   - **Draft** the proposal record now; don't write it yet. It's written with
+     the rest of the change set in step 8. Use `tims-tech-proposals`' rules:
+     supersede a `Decided` proposal; decide a `Default applied` one in place;
+     if the decision has no proposal yet, add one, already `Decided`.
+   - The one exception: if the engineer wants to read the full options in the
+     Proposals doc before choosing, write the proposal as `Open` first, and say
+     you're doing so.
 6. **Verify facts.** Any new path, symbol or precedent the change introduces is
-   checked on the base branch before it goes in.
+   checked on the base branch before it goes in (and on the current branch, if
+   a breakdown is under way). Each verified fact goes into the plan's **Repo
+   Facts Verified**, marked with the branch, short sha, date and revision.
 7. **Show the change set** and get explicit confirmation. Say which revision it
    lands in ("this lands in rev 3, this session's revision"). Then, for each
    document, per ID, show before and after:
@@ -256,17 +284,20 @@ For each change:
    1. **Comprehensive plan.**
       - Under each changed item, add
         `*Amended <YYYY-MM-DD> (rev <N+1>):* originally said "<old text>". <why>. Approved by the engineer.`
+        For a table row, put the note on its own line directly below the
+        table, starting with the row's ID (`*NB1 amended …*`).
       - A removed item keeps its ID: strike its text and mark it
         `**R12 (removed <YYYY-MM-DD>, rev <N+1>):** ~~<old text>~~ <why>`.
       - A new item takes the next unused ID in its series. IDs are never
         renumbered or reused.
-      - Set `Revision` to the session's revision (see **Session revision**), and
-        add a Change Log row: rev, date, change, IDs, `tims-tech-plan-review`.
+      - Set `Revision` to the session's revision (see **Session revision**),
+        update the header's Status line to `last amended <YYYY-MM-DD>`, and add
+        a Change Log row: rev, date, change, IDs, `tims-tech-plan-review`.
    2. **Tech Plan.** Update the affected lines following `tims-tech-plan`'s
       **Update** mode and rules (invoke it, or follow its loaded rules). That
       sets `Mirrors revision` to the session's revision.
-   3. **Tech Proposals**, if a decision changed: decided or superseded per step 5,
-      with **At a glance** updated.
+   3. **Tech Proposals**, if a decision changed: write the proposal drafted in
+      step 5 (decided, superseded or added), with **At a glance** updated.
    4. **Future Iterations**, if an item left scope (add an entry citing the
       change), came into scope (mark its entry `Moved into scope <YYYY-MM-DD>,
       rev <N+1>` rather than deleting it), or the change alters what an
@@ -288,13 +319,16 @@ Treat the following as Critical Decisions:
 - operational tradeoffs
 - customer-facing behavioural differences
 - implementation strategies with meaningful tradeoffs
-- unclear or conflicting requirements
+- unclear or conflicting requirements that a plain answer from the engineer
+  can't settle
 - future-proofing or extensibility decisions
 - optional refactors or adjacent improvements
 - any decision that materially affects implementation sequencing or technical
   direction
 
-When uncertainty exists, err on the side of escalation.
+When uncertainty exists, err on the side of escalation. A Critical Decision
+that comes up during a change is settled as in step 5 of the Amendment
+procedure.
 
 The engineer's change is the starting point. Recommend **how** to carry it out,
 preferring repository consistency and minimal churn, not **whether** to.

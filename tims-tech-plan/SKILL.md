@@ -27,8 +27,7 @@ metadata:
   plan, stop and point the engineer to `tims-adversarial-plan`. This skill
   doesn't plan.
 - The Tech Plan goes beside the comprehensive plan, with the matching name:
-  `<Prefix> - Comprehensive Tech Plan.md` → `<Prefix> - Tech Plan.md`;
-  `STAR-XXXXX.techplan-full.md` → `STAR-XXXXX.techplan.md`. If the
+  `<Prefix> - Comprehensive Tech Plan.md` → `<Prefix> - Tech Plan.md`. If the
   comprehensive plan's header already links a Tech Plan, use that path.
 
 ## Modes
@@ -111,7 +110,7 @@ is a view of it for human review.
 
 - **Mirrors revision:** <N> of the comprehensive plan · synced <YYYY-MM-DD, the day this doc was last written or updated>
 - **Tech Proposals:** <link> · **Future Iterations:** <link>
-- **Ticket:** <STAR-XXXXX, or "none yet"> · **Base branch:** `<base>`
+- **Ticket:** <issue key, if the comprehensive plan has one> · **Base branch:** `<base>`
 
 ## In one paragraph
 <3–5 sentences: what is being built, for whom, what it lets them do, and the

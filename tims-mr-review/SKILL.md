@@ -1,11 +1,16 @@
 ---
 name: tims-mr-review
-description: Comprehensive code review of a GitLab MR. Fetches the diff, reads changed files for context, then reviews for correctness, logic, security, performance, code style, test coverage, and Unity/C# conventions. Posts inline comments on specific lines and a summary comment. Gated: presents findings for approval before posting anything.
+description: >
+  Comprehensive code review of a GitLab MR. Fetches the diff, reads changed
+  files for context, then reviews for correctness, logic, security,
+  performance, code style, test coverage, and Unity/C# conventions. Posts
+  inline comments on specific lines and a summary comment. Gated: presents
+  findings for approval before posting anything.
 metadata:
   version: "0.1"
 ---
 
-# el-mr-review
+# tims-mr-review
 
 Perform a comprehensive, line-level code review of a GitLab Merge Request and
 (with approval) post the findings as inline comments.
@@ -25,11 +30,11 @@ This skill:
 ### Usage
 
 ```
-/el-mr-review [mr]
+/tims-mr-review [mr]
 ```
 
 **MR** (optional): the MR to review — an **MR number** (e.g. `8421`) or a
-**source branch** (e.g. `features/STAR-39596_spike_merge`). If omitted,
+**source branch** (e.g. `feature/add-login-screen`). If omitted,
 resolves from the **current branch**. If the match is ambiguous, ask the user.
 
 ## Preconditions
@@ -50,7 +55,7 @@ glab mr list --source-branch "$(git rev-parse --abbrev-ref HEAD)"   # by current
 ```
 
 Record:
-- **MR number** and **project path** (URL-encoded, e.g. `scopely%2Felectrum%2Fclient%2Felectrum-client`)
+- **MR number** and **project path** (URL-encoded, e.g. `my-group%2Fmy-project`)
 - **title**, **description**, **source branch**, **target branch**
 - **head SHA** (the latest commit on the MR)
 - **author**
@@ -89,9 +94,10 @@ Reading the full file — not just the diff hunk — is essential for:
 If a file is very large (>1000 lines), read the relevant sections: the changed
 hunks ± 100 lines, the class/struct declaration, and any referenced methods.
 
-Also fetch the MR description (Step 1) and read the linked JIRA ticket if a
-`STAR-XXXXX` reference is present and the Jira MCP/glab issue is available —
-it clarifies the intent and helps judge whether the implementation matches.
+Also fetch the MR description (Step 1) and read the linked issue if the MR
+references one (e.g. `PROJ-123` or `#42`) and an issue-tracker integration
+(a Jira MCP, `glab issue`) is available — it clarifies the intent and helps
+judge whether the implementation matches.
 
 ### 4. Review — dimensions
 
@@ -159,7 +165,7 @@ For each finding, record:
 - Comments that describe *what* the code does rather than *why* — flag only
   when the comment is actively misleading, not merely redundant
 - Inconsistent patterns with adjacent code in the same file
-- `TODO` / `FIXME` left in production code without a JIRA ticket reference
+- `TODO` / `FIXME` left in production code without an issue reference
 
 #### 4e. Unity & C# conventions
 

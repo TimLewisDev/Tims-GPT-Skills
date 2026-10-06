@@ -28,8 +28,8 @@ metadata:
 Seed input is optional. If none is provided, the first questions establish the
 feature at a high level before probing deeper. If intake documents (a spec,
 design doc, brief) are provided, read every one in full before the first probe.
-If a JIRA ticket (`STAR-XXXXX`) is referenced or inferable from the branch,
-capture it now; it determines where the documents go.
+If an issue or ticket is referenced, or inferable from the branch, note its key
+for the plan's header.
 
 ## Where this fits
 
@@ -51,19 +51,17 @@ present or amend what it recorded:
 | **Future Iterations** | this skill | engineer | Adjacent work that came up and was deliberately left out. |
 | **Tech Plan** | `tims-tech-plan`, called by this skill at hand-off | human reviewers | A brief summary that mirrors the comprehensive plan and adds nothing. |
 
-**Location and naming.** All four documents share one folder and prefix:
+**Location and naming.** All four documents share one folder, chosen with the
+engineer (an Obsidian vault, or a folder in the repo), and one prefix, usually
+the feature name:
 
-| Document | In an Obsidian vault | In the repo (`Tasks/STAR-XXXXX/`) |
-|---|---|---|
-| Comprehensive Tech Plan | `<Prefix> - Comprehensive Tech Plan.md` | `STAR-XXXXX.techplan-full.md` |
-| Tech Plan | `<Prefix> - Tech Plan.md` | `STAR-XXXXX.techplan.md` |
-| Tech Proposals | `<Prefix> - Tech Proposals.md` | `STAR-XXXXX.proposals.md` |
-| Future Iterations | `<Prefix> - Future Iterations.md` | `STAR-XXXXX.future.md` |
+- `<Prefix> - Comprehensive Tech Plan.md`
+- `<Prefix> - Tech Plan.md`
+- `<Prefix> - Tech Proposals.md`
+- `<Prefix> - Future Iterations.md`
 
-The repo names avoid `STAR-XXXXX.plan.md`, which `el-start-issue` creates with
-its own template. Match sibling documents' conventions: header or tag block,
-and link style (Obsidian `[[wiki-links]]` in a vault, relative Markdown links
-in the repo).
+Match sibling documents' conventions: header or tag block, and link style
+(Obsidian `[[wiki-links]]` in a vault, relative Markdown links elsewhere).
 
 **IDs.** Every agreed item gets a stable ID when it's agreed. IDs are never
 renumbered or reused.
@@ -187,7 +185,7 @@ location can't wait until the end.
 
 Then present **at least two** candidate approaches. Ground every tradeoff in
 the **actual repository and its conventions**: search the codebase, cite
-precedents as `path:line`, align to existing Electrum patterns, and avoid
+precedents as `path:line`, align to the repo's existing patterns, and avoid
 idealised redesigns or generic engineering advice. Adversarially probe the
 tradeoffs the engineer seems to favour.
 
@@ -201,8 +199,8 @@ For the approach choice:
 3. Record the answer: the proposal's Decision, and the chosen approach plus
    rejected alternatives (with rationale and the `P` link) under **Approach**.
 
-An approach usually breaks into several sub-choices (for example, the
-simulation host and the playback layer). Give each real choice its own
+An approach usually breaks into several sub-choices (for example, where the
+data is stored and how it's displayed). Give each real choice its own
 proposal.
 
 ### Phase 3 — Scope & constraints
@@ -302,7 +300,7 @@ Every decision point where you lay out two or more real alternatives with
 tradeoffs gets a proposal in the Tech Proposals doc, written **as it arises**,
 so the engineer can read the options in a clear layout before choosing. That
 includes choices in Phases 1 and 3 (type `Requirement or scope`, e.g. manual
-versus automatic re-bake), not only the approach and Critical Decisions. A
+versus automatic refresh), not only the approach and Critical Decisions. A
 plain agreed statement with no alternatives goes straight into the Ledger with
 no proposal.
 
@@ -393,7 +391,7 @@ Do **not** include the following unless the engineer explicitly asked for them:
 
 - **Status:** Signed off <YYYY-MM-DD> · **Revision:** 1 (see Change Log)
 - **Tech Plan (summary for review):** <link> · **Tech Proposals:** <link> · **Future Iterations:** <link>
-- **Ticket:** <STAR-XXXXX, or "none yet">
+- **Ticket:** <issue key; omit this line if there isn't one>
 - **Base branch:** `<base>` · **Verified against:** `<base>` @ `<short sha>` on <YYYY-MM-DD>
 - **ID key:** `R` Requirements · `A` Chosen Approach · `S` Scope / Non-Goals · `C` Constraints · `CD` Resolved Critical Decisions · `NB` Non-Blocking Review Items · `P` Tech Proposals · `§N` Implementation Plan step N
 

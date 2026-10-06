@@ -1,387 +1,327 @@
 # Tims-GPT-Skills
 
-A library of skill workflows for use with Claude, Codex, or GitHub Copilot.
+Skills for planning and building a feature with an AI coding agent while the
+engineer keeps control: every consequential decision is theirs, every plan
+change is confirmed, and git is never touched. A separate skill reviews GitLab
+merge requests.
 
-The repository contains eight skills, each defined in a top-level directory's
-`SKILL.md`. These files provide agent instructions and document templates, not
-an application or executable workflow engine. Installation and host-specific
-skill registration are not documented here.
+Each skill is a `SKILL.md` file in its own folder, written for Claude Code and
+usable with other agents that read the same format (Codex, GitHub Copilot).
+They are instructions and document templates, not code.
 
-## Workflow at a glance
+## The skills
 
-The main workflow is human-controlled feature delivery:
+| Skill | What it does |
+|---|---|
+| [`tims-adversarial-plan`](tims-adversarial-plan/SKILL.md) | Interviews you about a feature, pressure-tests it against the repo, and writes the plan once you sign off. |
+| [`tims-tech-proposals`](tims-tech-proposals/SKILL.md) | Lays out each decision's options side by side for review, and records what was chosen. |
+| [`tims-tech-plan`](tims-tech-plan/SKILL.md) | Writes a short, five-minute summary of the plan for reviewers. |
+| [`tims-tech-plan-review`](tims-tech-plan-review/SKILL.md) | Talks a written plan through with you, answers questions, and makes the changes you confirm. |
+| [`tims-task-breakdown`](tims-task-breakdown/SKILL.md) | Splits the plan into small tasks grouped into work units, then works through them one unit at a time. |
+| [`tims-task-status`](tims-task-status/SKILL.md) | Keeps the progress record that lets any new session pick up where the last one stopped. |
+| [`tims-implementation-agent`](tims-implementation-agent/SKILL.md) | Writes the code for one task (or a small plan), strictly within scope. |
+| [`tims-mr-review`](tims-mr-review/SKILL.md) | Reviews a GitLab merge request and posts only the comments you approve. |
+
+## How they fit together
 
 ```text
-Feature description, spec, or ticket
-  |
-  v
-tims-adversarial-plan
-  |-- tims-tech-proposals --> Tech Proposals (options and decisions)
-  |-- writes -------------> Future Iterations (only when work is excluded)
-  |-- writes -------------> Comprehensive Tech Plan (design authority)
-  `-- tims-tech-plan ------> Tech Plan (brief human-readable view)
-                                  |
-                       Engineer review and amendments
-                                  |
-                                  v
-Comprehensive Tech Plan --> tims-task-breakdown
-                              |-- Task Breakdown (cards and work units)
-                              `-- tims-task-status --> Task Status (resume point)
-                                  |
-                                  v
-                     Continue one work unit at a time
-                              |-- tims-implementation-agent (one Agent task)
-                              |-- Engineer tasks (tool-based work)
-                              `-- Work-unit validation (Agent and/or Engineer)
+Idea, spec or ticket
+  │
+  ▼
+tims-adversarial-plan ──(live)──► tims-tech-proposals ──► Tech Proposals
+  │  on sign-off, writes:
+  ├─► Comprehensive Tech Plan   (the authority)
+  ├─► Future Iterations         (only if work was left out)
+  └─► tims-tech-plan ──────────► Tech Plan (brief summary for review)
+  │
+  ▼
+You review the Tech Plan and Proposals
+  └─ tims-tech-plan-review: questions and changes, at any time
+  │
+  ▼
+tims-task-breakdown  (breakdown mode)
+  ├─► Task Breakdown            (task cards, grouped into work units)
+  └─► tims-task-status ────────► Task Status (progress and resume point)
+  │
+  ▼
+tims-task-breakdown  (continue mode), one work unit at a time:
+  ├─ Agent tasks    ──► tims-implementation-agent
+  ├─ Engineer tasks ──► a checklist for you
+  └─ validate the unit, then stop and report
 
-tims-tech-plan-review amends the comprehensive plan and synchronizes its views.
-tims-mr-review separately reviews an existing GitLab merge request.
+tims-mr-review stands apart: run it on any open GitLab MR.
 ```
 
-The planning and breakdown skills explicitly describe this pipeline:
-[planning workflow, lines 34–52](tims-adversarial-plan/SKILL.md#L34-L52);
-[breakdown workflow, lines 41–62](tims-task-breakdown/SKILL.md#L41-L62).
+In order:
+
+1. **Plan.** `tims-adversarial-plan` asks one question at a time and keeps a
+   visible *Consensus Ledger* of everything agreed. Each choice between options
+   becomes a proposal you can read before deciding. It only finishes when you
+   explicitly sign off the whole ledger.
+2. **Review.** Read the Tech Plan and Tech Proposals. Run
+   `tims-tech-plan-review` to walk through the plan, ask about it, or change it.
+3. **Break down.** `tims-task-breakdown` checks the plan against the repo,
+   proposes tasks and work units, and writes them once you approve.
+4. **Build and validate, one unit at a time.** Continue mode picks up from the
+   Task Status, does the unit's tasks, then validates the whole unit. It stops
+   after each unit.
+5. **Commit and publish yourself.** No skill stages, commits, pushes or creates
+   branches. Once there's an MR, `tims-mr-review` can review it.
 
 ## Where to start
 
-These entry points are inferred from the skills' documented inputs and
-safeguards; the skills are not formally divided into beginner and advanced tiers.
+| You want to… | Run |
+|---|---|
+| plan a feature from an idea, spec or ticket | `/tims-adversarial-plan [description, spec or ticket]` |
+| review, question or change a written plan | `/tims-tech-plan-review [tech plan] [comprehensive tech plan]` |
+| break a signed-off plan into tasks | `/tims-task-breakdown <comprehensive tech plan>` |
+| carry on building | `/tims-task-breakdown continue <task status doc>` |
+| see where things stand | `/tims-task-status <task status doc>` |
+| implement a small plan or ticket without a breakdown | `/tims-implementation-agent <plan, spec or ticket>` |
+| rebuild the brief Tech Plan | `/tims-tech-plan <comprehensive tech plan>` |
+| tidy a proposals doc, or create one for an existing plan | `/tims-tech-proposals <proposals doc or comprehensive tech plan>` |
+| review a GitLab MR | `/tims-mr-review [MR number or branch]` |
 
-| Your situation | Entry point | What to expect |
-|---|---|---|
-| You have an idea, spec, or unclear requirements | `/tims-adversarial-plan <optional description, spec or ticket>` | Guided questions, repository-grounded options, and explicit agreement before the final plan. |
-| You want to review a proposed feature | Read the generated Tech Plan and Tech Proposals | A brief summary and side-by-side decision options. |
-| You want a progress summary or are returning to existing work | `/tims-task-status <task status doc>` | Progress, blockers, reconciliation, and the next action. |
-| You want to continue implementation | `/tims-task-breakdown continue <task status doc>` | Resume the current unit, implement its tasks, then validate it. |
-| You already have an execution-ready comprehensive plan | `/tims-task-breakdown <comprehensive tech plan>` | Dependency-ordered task cards and validated work units. |
-| You need to amend a signed-off plan | `/tims-tech-plan-review <tech plan> <comprehensive tech plan>` | Confirmed amendments propagated across the authoritative plan and its views. |
-| You need to regenerate a summary | `/tims-tech-plan <comprehensive tech plan>` | A fresh brief view, not new design. |
-| You need to tidy or backfill decision records | `/tims-tech-proposals <proposals doc or comprehensive tech plan>` | Presentation cleanup or proposals derived from already-recorded alternatives. |
-| You have a tightly scoped implementation request | `tims-implementation-agent`, with a task card, plan, spec, ticket, or explicit instructions | Bounded implementation with progress records and escalation of critical decisions. |
-| You have an existing GitLab MR to review | MR review workflow; documented command: `/el-mr-review [mr]` | Findings presented before any approved comments are posted. |
+`[…]` is optional and `<…>` is required. If you're new to these skills, start with
+`tims-adversarial-plan`.
 
-For beginners, the guided planner and generated review documents are the most
-natural starting points. Advanced users can enter directly at decomposition,
-amendment, document maintenance, or standalone implementation when the required
-inputs already exist. Every task card and work unit also includes an
-outcome-oriented, non-technical **In plain English** summary.
-[Planner intake, lines 22–32](tims-adversarial-plan/SKILL.md#L22-L32);
-[brief review format, lines 50–69](tims-tech-plan/SKILL.md#L50-L69);
-[plain-English summaries, lines 569–579](tims-task-breakdown/SKILL.md#L569-L579).
+## Key ideas
 
-## Skill inventory
+### The documents
 
-### `tims-adversarial-plan` — discover requirements and design the feature
+All the documents for a feature sit in one folder (an Obsidian vault or a
+folder in the repo, agreed during planning) and share a prefix, usually the
+feature name. Links are `[[wiki-links]]` in a vault and relative Markdown links
+elsewhere.
 
-This is the planning entry point. It pressure-tests requirements, compares at
-least two repository-grounded approaches, establishes scope and constraints,
-and resolves technical decisions. It asks one focused question at a time and
-maintains a visible Consensus Ledger; contradictions halt progress until the
-engineer reconciles them.
+| Document | File name | Written by | What it's for |
+|---|---|---|---|
+| Comprehensive Tech Plan | `<Prefix> - Comprehensive Tech Plan.md` | `tims-adversarial-plan`; changed only through `tims-tech-plan-review` | The authority: requirements, approach, scope, constraints, decisions, verified repo facts and step-by-step design. |
+| Tech Proposals | `<Prefix> - Tech Proposals.md` | `tims-tech-proposals` | Each decision's options, the recommendation, and the outcome. |
+| Tech Plan | `<Prefix> - Tech Plan.md` | `tims-tech-plan` | A brief view of the comprehensive plan. Adds nothing of its own. |
+| Future Iterations | `<Prefix> - Future Iterations.md` | `tims-adversarial-plan` | Work that came up and was deliberately left out. |
+| Task Breakdown | `<Prefix> - Task Breakdown.md` | `tims-task-breakdown` | Task cards and work units, each with an *In plain English* summary for non-technical readers. |
+| Task Status | `<Prefix> - Task Status.md` | `tims-task-status` | Progress, logs, decisions and validation results. A new session reads this first. |
 
-- **Input:** optional feature description, spec, or ticket.
-- **Outputs:** Comprehensive Tech Plan at revision 1, Tech Proposals, brief Tech
-  Plan, and Future Iterations if excluded work was identified.
-- **Dependencies:** calls `tims-tech-proposals` live as decisions arise and
-  `tims-tech-plan` at handoff.
-- **Gate:** every blocking proposal must be resolved, and the engineer must
-  explicitly confirm agreement with the full ledger.
-- **Next:** review the human-facing documents, amend through
-  `tims-tech-plan-review` if needed, then run `tims-task-breakdown`.
-- **Boundary:** no production code or staging, commits, or pushes.
+### IDs and revisions
 
-Sources: [ledger and questioning, lines 140–164](tims-adversarial-plan/SKILL.md#L140-L164);
-[approach selection, lines 182–206](tims-adversarial-plan/SKILL.md#L182-L206);
-[contradictions, lines 243–256](tims-adversarial-plan/SKILL.md#L243-L256);
-[proposals and handoff, lines 299–352](tims-adversarial-plan/SKILL.md#L299-L352);
-[guardrails, lines 493–504](tims-adversarial-plan/SKILL.md#L493-L504).
+Everything agreed in planning gets a stable ID that is never renumbered or
+reused: `R` requirements, `A` approach, `S` scope and non-goals, `C`
+constraints, `CD` blocking decisions, `NB` non-blocking review items, `P`
+proposals, `§N` plan steps. Every line of the Tech Plan cites the IDs it
+summarises.
 
-### `tims-tech-proposals` — present options and preserve decisions
+The comprehensive plan has a `Revision` and a Change Log. Each review session
+that changes its meaning bumps the revision once, and every change leaves an
+amendment note quoting the old text. The Tech Plan records the revision it
+mirrors, and the breakdown records the revision it was built from, so later
+plan changes show up as drift.
 
-This skill maintains the Tech Proposals document for human comparison and
-review. The calling planner or plan reviewer owns the options and facts; this
-skill arranges them without inventing content.
+### Tasks, work units and who does what
 
-- **Usage:** `/tims-tech-proposals <proposals doc or comprehensive tech plan>`.
-- **Operations:** create, add, decide, and supersede.
-- **Statuses:** `Open`, `Default applied`, `Decided`, and `Superseded`.
-- **History:** reopening a decided proposal creates a new proposal and preserves
-  the previous outcome.
-- **Standalone:** tidy layout, check consistency, or backfill proposals using
-  alternatives and rationale already recorded in a comprehensive plan.
-- **Dependencies:** route content mismatches to `tims-tech-plan-review`; after
-  confirmed backfill links, have `tims-tech-plan` update an existing summary.
-- **Boundary:** no production code or staging, commits, or pushes.
+- A **task** is one change: one concern, small enough for one session and one
+  review. Every task has one **executor**:
+  - **Agent**: code and text files the agent can write.
+  - **Engineer**: work done by hand in a tool (an editor, a designer tool, an
+    admin console), plus tickets and branches.
+- A **work unit** is a few consecutive tasks (usually 2–5) that are **validated
+  together**. Tasks are never validated on their own: compile checks, tests and
+  the plan's "Done when" checks all run per unit, where their results can
+  actually be seen.
+- A unit is validated by the **Agent**, or by **Agent + Engineer** when some
+  checks need you. Your checks are given inline in chat as numbered steps, with
+  what you should see.
+- A task is `Implemented` when its steps are done, and `Done` only when its
+  unit passes validation. If a check fails, a fix task is added to the unit and
+  the whole unit is validated again.
 
-Sources: [usage and ownership, lines 19–48](tims-tech-proposals/SKILL.md#L19-L48);
-[statuses and operations, lines 50–85](tims-tech-proposals/SKILL.md#L50-L85);
-[standalone workflow, lines 116–148](tims-tech-proposals/SKILL.md#L116-L148).
+### Repo rules come from the repo
 
-### `tims-tech-plan` — render the brief review document
+The skills don't assume a language or engine. How to build or compile-check,
+which files are owned by a tool and must not be hand-edited, and branch rules
+are read from the repo's agent instructions (`AGENTS.md`, `CLAUDE.md` or
+equivalent). If they don't say how to compile-check, the breakdown asks once
+and records the answer.
 
-Despite its name, this is a **renderer, not a planning skill**. It summarizes
-the Comprehensive Tech Plan without adding, inferring, or reinterpreting design.
+## Skill reference
 
-- **Usage:** `/tims-tech-plan <comprehensive tech plan>`.
-- **Input requirement:** a comprehensive plan must already exist. Specs,
-  tickets, and briefs are redirected to `tims-adversarial-plan`.
-- **Modes:** Write, Regenerate, or targeted Update.
-- **Dependencies:** normally called by `tims-adversarial-plan`,
-  `tims-tech-plan-review`, or `tims-tech-proposals`.
-- **Traceability:** every summary bullet and table row cites authoritative IDs;
-  the header records `Mirrors revision`.
-- **Format:** approximately 60–120 lines, a five-minute read, and no code blocks.
-  Proposal content contributes only IDs and statuses.
-- **Boundary:** no production code or staging, commits, or pushes.
+### [`tims-adversarial-plan`](tims-adversarial-plan/SKILL.md): plan a feature
 
-Sources: [usage and modes, lines 18–48](tims-tech-plan/SKILL.md#L18-L48);
-[renderer rules and checks, lines 50–99](tims-tech-plan/SKILL.md#L50-L99).
+Acts as a *collaborative adversary*: challenges assumptions, probes edge cases
+and pushes for an explicit "is / is not" scope, without blocking progress.
 
-### `tims-tech-plan-review` — amend a written plan consistently
+- **Run it:** `/tims-adversarial-plan [description, spec or ticket]`
+- **Reads → writes:** your intake and the repo → Comprehensive Tech Plan
+  (revision 1), Tech Proposals, Future Iterations (if needed), Tech Plan.
+- **Calls:** `tims-tech-proposals` as each decision comes up;
+  `tims-tech-plan` at hand-off.
+- **Key rules:** one question at a time; at least two approaches, each grounded
+  in the repo's existing patterns (`path:line`); a contradiction stops progress
+  until you resolve it; blocking decisions wait for your choice, while review
+  items apply the recommendation and stay open for review; it never decides
+  you're finished, and "looks fine" doesn't count as sign-off.
+- **Won't:** write production code, or add test plans, rollout plans or
+  speculative work unless you ask.
 
-This is the designated route for substantive changes to an existing plan.
-It applies exactly the engineer's requested amendments and follows their impact
-through related requirements, decisions, steps, files, and views.
+### [`tims-tech-proposals`](tims-tech-proposals/SKILL.md): present decisions
 
-- **Usage:** `/tims-tech-plan-review <tech plan> <comprehensive tech plan>`.
-  Either path order works; one path suffices if it links the other.
-- **Prerequisite:** the comprehensive plan must be available; check revision
-  synchronization before amending.
-- **Gate:** handle amendments individually and confirm each change set.
-- **Dependencies:** decision changes use `tims-tech-proposals`; summary updates
-  follow `tims-tech-plan`.
-- **Order:** comprehensive plan first, then brief Tech Plan, affected proposals,
-  and Future Iterations.
-- **History:** substantive amendments preserve notes and stable IDs, increment
-  the revision, and add Change Log entries.
-- **Boundary:** never edits Task Breakdown or Task Status documents, production
-  code, or commits. Existing execution work is flagged for follow-up in
-  breakdown continue mode.
+Makes each decision easy to review later without the conversation that
+produced it: the question, a side-by-side table, each option under the same
+headings, the recommendation, and the decision.
 
-Sources: [usage and ownership, lines 20–50](tims-tech-plan-review/SKILL.md#L20-L50);
-[sync and execution impact, lines 54–77](tims-tech-plan-review/SKILL.md#L54-L77);
-[amendment procedure and handoff, lines 86–157](tims-tech-plan-review/SKILL.md#L86-L157).
+- **Run it:** normally called by the planner or plan review. Run directly to
+  tidy a proposals doc and check it against its plan, or to create proposals
+  for a plan that has none, using only the alternatives the plan records.
+- **Statuses:** `Open`, `Default applied` (recommendation in use, open for
+  review), `Decided`, `Superseded`.
+- **Key rules:** the calling skill supplies every option and fact, and this
+  skill only arranges them; proposals are never deleted, and reopening a
+  decided one creates a new proposal that supersedes it.
+- **Won't:** invent options, benefits or risks; change plan content (it
+  reports mismatches to `tims-tech-plan-review`).
 
-### `tims-task-breakdown` — decompose, orchestrate, and validate
+### [`tims-tech-plan`](tims-tech-plan/SKILL.md): summarise the plan
 
-This skill slices an execution-ready Comprehensive Tech Plan into atomic,
-dependency-ordered tasks and groups them into work units. It does not redesign
-the feature or write production code itself.
+A renderer, not a planner: it turns the comprehensive plan into a five-minute
+read (about 60–120 lines, no code blocks).
 
-- **Breakdown mode:** `/tims-task-breakdown <comprehensive tech plan>`.
-- **Continue mode:** `/tims-task-breakdown continue <task status doc>`.
-- **Authority:** a brief Tech Plan or proposals document is only a route to the
-  comprehensive plan, not an independent design source.
-- **Dependencies:** `tims-task-status` owns execution records;
-  `tims-implementation-agent` implements one Agent task per handoff.
-- **Task:** one implementation concern, one executor, and a self-contained card.
-  Tasks carry no independent validation.
-- **Work unit:** consecutive tasks validated together, preferably 2–5 tasks,
-  although a single-task unit is allowed.
-- **Ordering:** prerequisites start at `T00`; tasks and units record explicit
-  dependencies. Every plan completion check belongs to exactly one unit.
-- **Boundary:** git operations belong to the engineer.
+- **Run it:** `/tims-tech-plan <comprehensive tech plan>`. Usually called by
+  other skills.
+- **Modes:** *Write* (new), *Regenerate* (full rewrite), *Update* (only the
+  lines citing changed IDs).
+- **Key rules:** every line cites its IDs; records `Mirrors revision`; anything
+  missing from the plan is reported, not patched into the summary.
+- **Won't:** add, infer or reinterpret anything. Given a spec or ticket, it
+  points you to `tims-adversarial-plan`.
 
-Sources: [usage and authority, lines 21–74](tims-task-breakdown/SKILL.md#L21-L74);
-[status ownership, lines 76–87](tims-task-breakdown/SKILL.md#L76-L87);
-[task and unit definitions, lines 116–194](tims-task-breakdown/SKILL.md#L116-L194);
-[ordering and coverage, lines 291–350](tims-task-breakdown/SKILL.md#L291-L350).
+### [`tims-tech-plan-review`](tims-tech-plan-review/SKILL.md): review and change a plan
 
-### `tims-task-status` — maintain the single resume record
+A conversational review partner, and the only way a written plan changes.
 
-This skill owns all writes to the Task Status document: boards, progress,
-Resume Here, Step Logs, decisions, risks, improvements, and validation attempts.
+- **Run it:** `/tims-tech-plan-review [tech plan] [comprehensive tech plan]`.
+  Either order works; one path is enough if it links the other; with none, it
+  asks.
+- **How a session goes:** it reads the whole plan set (and any breakdown,
+  read-only), then gives a short orientation: revision, whether the Tech Plan
+  is in sync, open proposals and breakdown progress. Then it asks what you'd
+  like: a section-by-section walkthrough, the open proposals, a specific
+  change, or questions. It loops until you say you're done, then summarises.
+- **Changes:** one at a time. It shows the impact and a before/after for every
+  affected document, and writes only after you confirm. The comprehensive plan
+  changes first, then the Tech Plan, Proposals and Future Iterations.
+- **Key rules:** one revision per session however many changes it makes;
+  confirming a `Default applied` proposal records the decision without a new
+  revision; switching a decision's option goes through a proposal.
+- **Won't:** edit the Task Breakdown or Task Status. Changes show up as drift
+  the next time `tims-task-breakdown` continues.
 
-- **Usage:** `/tims-task-status <task status doc>`.
-- **Standalone behavior:** give a resume summary and reconcile with repository
-  reality; recorded corrections require engineer confirmation.
-- **Callers:** breakdown uses initialization, state changes, summaries,
-  reconciliation, and validation records; implementation uses logs, blockers,
-  risks, improvements, and standalone initialization.
-- **Persistence:** save every state change, including `In Progress` before code
-  changes. Recompute derived fields together.
-- **Completion:** `Implemented` means task steps are finished; `Done` means its
-  work unit passed validation. Unanswered engineer checks prevent unit completion.
-- **Reconciliation:** check branch, files, partial work, board agreement, and stale
-  validation evidence. Plan drift belongs to `tims-task-breakdown`.
-- **Boundary:** no staging, commits, pushes, or branch creation.
+### [`tims-task-breakdown`](tims-task-breakdown/SKILL.md): slice and deliver
 
-Sources: [usage and callers, lines 19–38](tims-task-status/SKILL.md#L19-L38);
-[consistency and statuses, lines 40–99](tims-task-status/SKILL.md#L40-L99);
-[reconciliation and summary, lines 162–201](tims-task-status/SKILL.md#L162-L201).
+Turns the plan into tasks and work units, then drives the build one unit at a
+time. It slices the design but never changes it.
 
-### `tims-implementation-agent` — implement strictly bounded changes
+- **Run it:** `/tims-task-breakdown <comprehensive tech plan>` (breakdown
+  mode), or `/tims-task-breakdown continue <task status doc>` (continue mode;
+  `resume` and `status` also work).
+- **Breakdown mode:** verifies every path and symbol the plan cites on its base
+  branch; writes self-contained task cards; places every "Done when" check on
+  exactly one unit; checks coverage; writes the documents only after you
+  approve.
+- **Continue mode:** reconciles the Task Status with the repo; flags plan
+  changes since the breakdown; confirms the next unit with you once; runs its
+  tasks back to back; then validates the unit.
+- **Calls:** `tims-task-status` for every status change;
+  `tims-implementation-agent` for each Agent task.
+- **Won't:** redesign the feature, edit the plan (it sends you to
+  `tims-tech-plan-review`), or offer to commit.
 
-This is an implementation skill, not a planning skill. It needs a task card,
-plan, or explicit instructions before writing code. Its file describes input
-modes rather than providing a slash-command Usage section.
+### [`tims-task-status`](tims-task-status/SKILL.md): keep the resume point
 
-- **Via breakdown:** implement exactly one task, use the existing Task Status,
-  and leave validation to the work unit.
-- **Standalone:** implement a supplied plan/spec/ticket, initialize minimal status
-  if necessary, perform a minimum compile check, and provide inline engineer
+Owns every write to the Task Status doc, so it stays something a fresh session
+can trust.
+
+- **Run it:** `/tims-task-status <task status doc>` for a summary, a
+  consistency check and a reconcile with the repo. Usually called by other
+  skills.
+- **Operations:** `init`, `set`, `log`, `record`, `reconcile`, `summary`.
+- **Key rules:** saves at every state change, including `In Progress` before
+  any code changes; boards, header and *Resume Here* always agree; corrections
+  found by reconcile are applied only after you confirm; nothing is deleted.
+- **Standalone mode:** when `tims-implementation-agent` works from a plan with
+  no breakdown, the doc has no work units and a task is `Done` once its
+  compile check passes.
+- **Won't:** check for plan drift (that's the breakdown's job), or stage,
+  commit, push or branch.
+
+### [`tims-implementation-agent`](tims-implementation-agent/SKILL.md): write the code
+
+Implements exactly what it's given and escalates everything else.
+
+- **Run it:** called by `tims-task-breakdown` with one task card, or directly
+  with a plan, spec or ticket (standalone).
+- **Via a breakdown:** one task only; no validation, but it leaves *To
+  validate* notes for the unit's checks.
+- **Standalone:** works the plan's steps in order, keeps a minimal Task Status,
+  runs a compile check using the repo's method, and gives you inline
   validation steps.
-- **Dependency:** all status writes go through `tims-task-status`.
-- **Authority:** codebase reality, engineer instructions, task card, plan, then
-  general best practices.
-- **Autonomy:** tactical local decisions only. Critical decisions stop code
-  changes and require engineer guidance.
-- **Amendments:** plan changes go through `tims-tech-plan-review`; card changes
-  go through `tims-task-breakdown`.
-- **Boundary:** no unrelated cleanup, speculative improvements, unauthorized
-  dependency changes, or git operations.
-- **Traceability:** planning IDs belong in the Step Log, not production code,
-  comments, test names, or messages.
+- **Key rules:** the codebase is the source of truth, ahead of your
+  instructions, the task card and the plan; it makes only small local
+  decisions itself; anything bigger is a *Critical Decision* that marks the
+  task `Blocked` and waits for you; it records improvements it spots instead of
+  making them; no planning IDs (`T07`, `R14`, `CD1`…) in code, comments or test
+  names.
+- **Won't:** expand scope, refactor nearby code, add dependencies, or touch
+  git.
 
-Sources: [modes, lines 10–24](tims-implementation-agent/SKILL.md#L10-L24);
-[authority and boundaries, lines 26–116](tims-implementation-agent/SKILL.md#L26-L116);
-[code traceability, lines 118–151](tims-implementation-agent/SKILL.md#L118-L151);
-[escalation, status, and validation, lines 172–262](tims-implementation-agent/SKILL.md#L172-L262).
+### [`tims-mr-review`](tims-mr-review/SKILL.md): review a GitLab MR
 
-### `tims-mr-review` — review an existing GitLab merge request
+A line-by-line review meant to stand in for a senior engineer's review.
 
-This separate workflow reviews correctness, security, performance,
-maintainability, Unity/C# conventions, and test coverage, then optionally posts
-approved findings.
+- **Run it:** `/tims-mr-review [MR number or branch]`. With no argument, it
+  uses the MR for the current branch.
+- **Needs:** `glab` (authenticated) or a GitLab MCP server; ideally the repo
+  checked out, otherwise it reviews from the diff alone.
+- **Checks:** correctness, security, performance, style (`.editorconfig` is the
+  source of truth), Unity and C# conventions, and test coverage. Each finding
+  has a file, line, severity and suggested fix. Binary and Unity-managed files
+  are skipped.
+- **Key rules:** shows every finding before posting anything; posts only the
+  inline comments and summary you approve (partial approvals work); flags only
+  issues the MR introduced or made worse.
+- **Won't:** approve or merge the MR.
 
-- **Naming caveat:** the directory and metadata say `tims-mr-review`, but the
-  heading and documented command say `el-mr-review` and `/el-mr-review [mr]`.
-  The file does not resolve which command an installed host exposes.
-- **Input:** MR number, source branch, or the current branch when omitted.
-- **Dependencies:** authenticated `glab` or GitLab MCP, a resolvable MR, and
-  preferably its working tree. Without the repository, review is diff-only.
-- **Context:** fetch the MR diff, read changed text files, and optionally read
-  a linked JIRA ticket.
-- **Gate:** present findings before publishing; inline and summary comments
-  require explicit approval, including partial approvals.
-- **Ordering:** independent of the planning skills and usable after an MR exists.
-  It does not create or merge the MR.
+## Requirements
 
-Sources: [identity, usage, and prerequisites, lines 1–41](tims-mr-review/SKILL.md#L1-L41);
-[diff and context, lines 58–94](tims-mr-review/SKILL.md#L58-L94);
-[review dimensions, lines 96–188](tims-mr-review/SKILL.md#L96-L188);
-[approval and publishing, lines 190–303](tims-mr-review/SKILL.md#L190-L303).
+- **Claude Code features:** the skills call each other through the Skill tool
+  and ask questions with `AskUserQuestion`. Other agents may need equivalents.
+- **A git repo with a base branch:** facts are checked on `origin/<base>`
+  after a `git fetch`, not in the working tree.
+- **Agent instructions in the repo** (`AGENTS.md`, `CLAUDE.md` or equivalent)
+  for build checks and tool-managed files. Without them, the skills ask you.
+- **For `tims-mr-review`:** GitLab, with `glab` or a GitLab MCP server. An
+  issue-tracker integration is optional and used to read the linked issue.
 
-## Documents and ownership
+## Setup (Claude Code)
 
-| Document | Owner | Role |
-|---|---|---|
-| Comprehensive Tech Plan | `tims-adversarial-plan`; amended through `tims-tech-plan-review` | Authoritative requirements, scope, constraints, decisions, repository facts, and implementation design. |
-| Tech Proposals | `tims-tech-proposals` | Human-readable options and decision history. |
-| Tech Plan | `tims-tech-plan` | Brief view of the comprehensive plan. |
-| Future Iterations | Planner; affected amendments through plan review | Deliberately excluded work, separate from implementation scope. |
-| Task Breakdown | `tims-task-breakdown` | Execution cards, dependencies, work units, and their checks. |
-| Task Status | `tims-task-status` | Persistent execution evidence and the single resume point. |
+Claude Code finds personal skills at `~/.claude/skills/<skill-name>/SKILL.md`,
+exactly one folder deep, so it won't see them inside a cloned repo folder.
+Clone the repo anywhere, then link each skill folder into `~/.claude/skills`:
 
-Sources: [planning document ownership, lines 47–52](tims-adversarial-plan/SKILL.md#L47-L52);
-[execution document ownership, lines 76–87](tims-task-breakdown/SKILL.md#L76-L87).
+```powershell
+# Windows (PowerShell): directory junctions, no admin rights needed
+Get-ChildItem <clone path> -Directory -Filter "tims-*" | ForEach-Object {
+  New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\$($_.Name)" -Target $_.FullName
+}
+```
 
-### Output naming
+```sh
+# macOS / Linux
+for d in <clone path>/tims-*/; do ln -s "${d%/}" ~/.claude/skills/; done
+```
 
-Generated documents share a folder and prefix. These are output conventions,
-not example feature documents included in this repository.
-
-| Document | Obsidian-style name | Name under `Tasks/STAR-XXXXX/` |
-|---|---|---|
-| Comprehensive Tech Plan | `<Prefix> - Comprehensive Tech Plan.md` | `STAR-XXXXX.techplan-full.md` |
-| Tech Plan | `<Prefix> - Tech Plan.md` | `STAR-XXXXX.techplan.md` |
-| Tech Proposals | `<Prefix> - Tech Proposals.md` | `STAR-XXXXX.proposals.md` |
-| Future Iterations | `<Prefix> - Future Iterations.md` | `STAR-XXXXX.future.md` |
-| Task Breakdown | `<Prefix> - Task Breakdown.md` | `STAR-XXXXX.tasks.md` |
-| Task Status | `<Prefix> - Task Status.md` | `STAR-XXXXX.status.md` |
-
-Vault documents use wiki-links; repository documents use relative Markdown
-links. The planner avoids `STAR-XXXXX.plan.md`, which it attributes to an
-external `el-start-issue` workflow.
-[Planning names, lines 54–66](tims-adversarial-plan/SKILL.md#L54-L66);
-[breakdown names, lines 93–103](tims-task-breakdown/SKILL.md#L93-L103).
-
-Stable IDs connect the artifacts: `R` requirements, `A` approach, `S` scope and
-non-goals, `C` constraints, `CD` blocking decisions, `NB` review items, `P`
-proposals, and `§N` plan steps. The comprehensive plan carries a Revision and
-Change Log; the summary records its mirrored revision. IDs are never renumbered
-or reused.
-[Planning IDs and sync, lines 68–85](tims-adversarial-plan/SKILL.md#L68-L85).
-
-## Execution and validation lifecycle
-
-1. **Agree on the feature.** Resolve blocking decisions and explicitly sign off
-   the full ledger before final planning output.
-2. **Review and amend.** Read the brief Tech Plan and proposals. Change meaning
-   through plan review, updating the comprehensive authority first.
-3. **Verify and decompose.** Check plan references on its base branch, create
-   atomic cards, group them into units, and verify coverage. The engineer
-   approves the breakdown before it is written and status is initialized.
-4. **Resume safely.** Read Task Status first, reconcile with reality, and inspect
-   newer plan Change Log entries for drift affecting current or later work.
-5. **Implement one unit.** Confirm the unit once. Persist each task's
-   `In Progress` state before work, then execute Agent or Engineer tasks as
-   dependencies allow. Record completed steps as `Implemented`.
-6. **Validate the unit.** Run Agent checks and present concrete Engineer checks
-   inline. Pending answers remain pending; all checks must pass for `Done`.
-7. **Handle failures.** Propose an approved fix task within the failed unit, then
-   rerun the whole unit's validation, not just the failed check.
-8. **Report and hand back control.** Stop after unit validation and report the
-   next unit. The engineer chooses when to commit and publish; the MR review
-   workflow can later review an existing GitLab MR.
-
-Sources: [planning gate and output, lines 318–352](tims-adversarial-plan/SKILL.md#L318-L352);
-[amendment order, lines 121–148](tims-tech-plan-review/SKILL.md#L121-L148);
-[verification and decomposition, lines 232–350](tims-task-breakdown/SKILL.md#L232-L350);
-[resume and execution, lines 352–450](tims-task-breakdown/SKILL.md#L352-L450);
-[unit validation, lines 454–494](tims-task-breakdown/SKILL.md#L454-L494).
-
-**Deferred validation is not omitted validation.** Tasks are designed to leave
-the project compilable, but compilation is checked at work-unit level. Breakdown
-adds compile checks, guard tests, and behavioral checks alongside the plan's
-completion criteria. The planner separately avoids broad test plans unless
-requested, keeping design and execution validation at different layers.
-[Task atomicity, lines 133–149](tims-task-breakdown/SKILL.md#L133-L149);
-[unit checks, lines 291–305](tims-task-breakdown/SKILL.md#L291-L305);
-[planning exclusions, lines 373–383](tims-adversarial-plan/SKILL.md#L373-L383).
-
-## Dependencies and portability caveats
-
-- **Host capabilities:** planning refers to a Skill tool and `AskUserQuestion`.
-  Equivalent invocation and interactive support across Claude, Codex, and
-  Copilot are not established by these files.
-  [Selection, lines 194–202](tims-adversarial-plan/SKILL.md#L194-L202);
-  [skill invocation, lines 309–311](tims-adversarial-plan/SKILL.md#L309-L311).
-- **Repository access and git:** planning, amendment verification, and breakdown
-  verify facts on a fetched base branch, not just the current working tree.
-  Read-only inspection is distinct from the staging, committing, pushing, and
-  branching left to the engineer.
-  [Base-branch checks, lines 221–238](tims-adversarial-plan/SKILL.md#L221-L238);
-  [breakdown verification, lines 249–270](tims-task-breakdown/SKILL.md#L249-L270).
-- **Electrum and Unity/C# assumptions:** several skills reference Electrum
-  patterns, Unity-managed assets, an external `AGENTS.md`, and Editor workflows.
-  Breakdown cites a local Claude memory file for out-of-band assembly compilation;
-  standalone implementation uses the same external procedure. Those supporting
-  files and tools are not supplied by this repository.
-  [Electrum precedents, lines 188–192](tims-adversarial-plan/SKILL.md#L188-L192);
-  [Unity execution assumptions, lines 212–230](tims-task-breakdown/SKILL.md#L212-L230);
-  [standalone compilation, lines 247–251](tims-implementation-agent/SKILL.md#L247-L251).
-- **Human tool work:** Unity scenes, prefabs, assets, and metadata are normally
-  Engineer tasks; new assemblies require an Editor refresh before the described
-  compilation method can work.
-  [Executors and Unity rules, lines 196–230](tims-task-breakdown/SKILL.md#L196-L230).
-- **GitLab and optional JIRA integration:** MR review requires GitLab
-  authentication and a resolvable MR. Ticket lookup is conditional on integration
-  availability. `STAR-XXXXX` is a naming convention, not a bundled ticket system.
-  [MR prerequisites, lines 35–41](tims-mr-review/SKILL.md#L35-L41);
-  [optional ticket context, lines 92–94](tims-mr-review/SKILL.md#L92-L94).
-- **Legacy formats:** breakdown accepts older Tech Plan + Feature Consensus pairs
-  as a combined plan, but plan review rejects that format. Task Status accepts
-  older Testing Framework links and log fields without rewriting historical
-  entries; the Testing Framework document is no longer updated.
-  [Legacy breakdown, lines 105–114](tims-task-breakdown/SKILL.md#L105-L114);
-  [review restriction, lines 31–35](tims-tech-plan-review/SKILL.md#L31-L35);
-  [legacy status, lines 203–213](tims-task-status/SKILL.md#L203-L213).
-
-The defining principle is separation of responsibilities: design authority,
-human-readable views, execution cards, persistent evidence, and implementation
-each have an owner. Consequential decisions and publication stay with the
-engineer rather than becoming autonomous end-to-end delivery.
+A `git pull` in the clone updates every skill, and edits made through
+`~/.claude/skills` show up as changes in the clone. Restart Claude Code to pick
+up new skills.
 
 ## License
 

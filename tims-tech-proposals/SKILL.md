@@ -27,9 +27,8 @@ Normally this skill is invoked by another skill mid-session, and the operation
 directly, it **tidies and checks**: see **Standalone use**.
 
 Naming follows the comprehensive plan: `<Prefix> - Comprehensive Tech Plan.md`
-→ `<Prefix> - Tech Proposals.md`; `STAR-XXXXX.techplan-full.md` →
-`STAR-XXXXX.proposals.md`. Match sibling documents' header or tag block and
-link style.
+→ `<Prefix> - Tech Proposals.md`, in the same folder. Match sibling documents'
+header or tag block and link style.
 
 ## Role
 
@@ -81,8 +80,10 @@ Types:
 
 **Linking a proposal.** Proposal headings are `## Pn — <question>`. Elsewhere,
 link one by that heading: in a vault
-`[[<Prefix> - Tech Proposals#Pn — <question>|Pn]]`; in the repo
-`[Pn](STAR-XXXXX.proposals.md)`, which names the ID and links the file.
+`[[<Prefix> - Tech Proposals#Pn — <question>|Pn]]`; elsewhere, a relative
+Markdown link to the file that names the ID, e.g.
+`[P3](<Login Flow - Tech Proposals.md>)` (the angle brackets allow the spaces
+in the file name).
 
 ## Readability rules
 

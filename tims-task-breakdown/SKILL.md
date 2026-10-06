@@ -86,32 +86,17 @@ values, and every write to it. This skill never edits it by hand; each
 `log`, `record`, `reconcile`, `summary`). Invoke it once per session and follow
 its loaded rules for later updates.
 
-There is **no Testing Framework document**. Validation instructions are given
+There is no separate validation document. Validation instructions are given
 to the engineer inline, in chat, when a unit is validated (see Continue mode
-step 8). Older breakdowns may link one; it is no longer updated.
+step 8).
 
 **Location and naming.** Put both beside the comprehensive plan and follow its
-naming:
-
-- `<Prefix> - Comprehensive Tech Plan.md` (e.g. in an Obsidian vault) →
-  `<Prefix> - Task Breakdown.md`, `<Prefix> - Task Status.md`
-- `Tasks/STAR-XXXXX/STAR-XXXXX.techplan-full.md` → `STAR-XXXXX.tasks.md`,
-  `STAR-XXXXX.status.md`
+naming: `<Prefix> - Comprehensive Tech Plan.md` → `<Prefix> - Task
+Breakdown.md` and `<Prefix> - Task Status.md`.
 
 Match the sibling documents' conventions: header or tag block, and link style
-(Obsidian `[[wiki-links]]` in a vault, relative Markdown links in the repo).
+(Obsidian `[[wiki-links]]` in a vault, relative Markdown links elsewhere).
 Confirm the location before writing.
-
-**Older plans (written before 2026-10-05).** These are a *Tech Plan + Feature
-Consensus* pair (`<Prefix> - Tech Plan.md` and `<Prefix> - Feature
-Consensus.md`, or `STAR-XXXXX.plan.md`), with no Comprehensive Tech Plan.
-Recognise one by structure, not by date: its Tech Plan has no `Revision` or
-Change Log and links a Feature Consensus doc as its intake. Treat
-the pair together as the comprehensive plan: the `R`, `A`, `S` and `C` IDs come
-from the Feature Consensus, and the `CD`, `NB` and `§` IDs from the Tech Plan.
-For plan drift, fall back to comparing the files' modified dates with the
-breakdown's "Plan read" date. Breakdowns already written against such a pair
-keep working unchanged.
 
 ## Tasks and work units
 
@@ -123,12 +108,12 @@ There are two levels, and they have different jobs:
 - A **work unit** is the unit of *validation*: a group of consecutive tasks
   whose results are tested and confirmed together. **All validation and
   confirmation happens at work-unit level**, once every task in the unit is
-  finished. That includes compile checks, test runs, Editor checks and the
-  plan's "Done when" items.
+  finished. That includes compile checks, test runs, checks in the running
+  app or a tool, and the plan's "Done when" items.
 
 Validating per unit lets the plan's checks land where they can actually be
-observed, and keeps the engineer's round trips (Editor refresh, Test Runner,
-Scene view) to one per unit instead of one per task.
+observed, and keeps the engineer's round trips (rebuilding, running tests,
+trying it in the app) to one per unit instead of one per task.
 
 ### What "atomic" means for a task
 
@@ -152,8 +137,9 @@ Split a plan step into several tasks when:
 
 - it creates a contract and its consumers (an interface and the classes that
   use it) and they can compile in stages;
-- it mixes code with Editor-authored assets (scenes, prefabs, assets);
-- it spans more than one assembly;
+- it mixes code with content that has to be authored in a tool (an editor,
+  a designer tool);
+- it spans more than one module or assembly;
 - it wouldn't fit in one session, or its diff would be too large to review in
   one sitting.
 
@@ -177,21 +163,21 @@ A work unit is well formed when **all** of these hold:
 - **Leaves the project whole.** After its last task the code compiles and
   nothing that worked before is broken.
 - **Something to notice.** Its outcome can be described to a non-technical
-  reader as "after this unit you can…". Work units replace milestones.
+  reader as "after this unit you can…".
 - **Traceable failures.** It's small enough that a failed check can be traced
   to the task that caused it. Prefer 2–5 tasks; a single-task unit is fine
   when that task is testable alone.
 - **Consecutive.** Its tasks are consecutive in ID order, and every task
   belongs to exactly one unit.
 
-Draw unit boundaries where the engineer would naturally stop to test: after a
-new assembly first gets sources (it needs an Editor refresh to compile), when a
-test becomes runnable, when something first appears in the Scene view or a
-window. Group checks that need the same engineer action into the same unit.
+Draw unit boundaries where the engineer would naturally stop to test: when a
+new module first builds, when a test becomes runnable, when something first
+appears in the app or a tool. Group checks that need the same engineer action
+into the same unit.
 
-A unit may contain only Engineer tasks (e.g. authoring a scene), or mix Agent
-and Engineer tasks. A unit's validation may be run by the agent alone or need
-the engineer; record which.
+A unit may contain only Engineer tasks (e.g. authoring content in a tool), or
+mix Agent and Engineer tasks. A unit's validation may be run by the agent alone
+or need the engineer; record which.
 
 ## Executors
 
@@ -200,34 +186,34 @@ Every task names exactly one executor:
 | Executor | Use for | In continue mode |
 |---|---|---|
 | **Agent** | Code and text files the agent can write. | Handed to `tims-implementation-agent`. |
-| **Engineer** | Work that must be done in a tool: authoring scenes, prefabs or assets in the Unity Editor; creating tickets; creating branches; anything the plan says must not be hand-edited. | Present the card's Steps as a checklist, wait for the engineer, record what they report. |
+| **Engineer** | Work that must be done in a tool (an editor, a designer tool, an admin console); creating tickets; creating branches; anything the plan or the repo's instructions say must not be hand-edited. | Present the card's Steps as a checklist, wait for the engineer, record what they report. |
 
 Every work unit names who **validates** it:
 
 | Validated by | Use when |
 |---|---|
-| **Agent** | Every check can be run by the agent (e.g. an out-of-band compile check, a grep, reading a file). |
-| **Agent + Engineer** | At least one check needs the engineer (Editor compile, Test Runner, Inspector, Scene view behaviour). The agent runs its checks first, then hands the engineer the rest as a checklist. |
+| **Agent** | Every check can be run by the agent (e.g. a build or compile check, a grep, reading a file). |
+| **Agent + Engineer** | At least one check needs the engineer (a build or test run only they can start, or behaviour seen in the running app or a tool). The agent runs its checks first, then hands the engineer the rest as a checklist. |
 
-Electrum rules that decide executors and validation (see `AGENTS.md`):
+**Repo rules decide executors and validation.** Read the repo's agent
+instructions (`AGENTS.md`, `CLAUDE.md` or equivalent) before deciding either.
+Where they cover something below, they win over these defaults:
 
-- `.unity`, `.prefab`, `.asset` and `.meta` files are managed through Unity.
-  Authoring them is an **Engineer** task unless the plan and the engineer
-  explicitly say otherwise. The agent never writes `.meta` files; Unity
-  generates them.
-- There is no CLI build from the repo root, and no CLI Test Runner while the
-  Editor has the project open. The agent can compile-check an assembly out of
-  band with Unity's `csc` (method: the `verify-unity-assembly-compiles` memory,
-  `~/.claude/projects/P--Electrum-electrum-client/memory/verify-unity-assembly-compiles.md`).
-  That only works for assemblies Unity has already generated a `.csproj` for,
-  and new `.cs` files must be added to the source list by hand. A unit that
-  creates a brand-new assembly therefore needs an Editor refresh, which makes
-  its validation **Agent + Engineer**.
-- Unity doesn't compile an assembly definition that has no scripts. It warns
-  that the assembly "will not be compiled", and doesn't generate a `.csproj`.
-  Create an asmdef in the same task, or at least the same unit, as its first
-  script.
-- Branch names are validated. Branches, commits and pushes are the engineer's.
+- **Tool-managed files.** Files a tool generates or owns (for example, Unity's
+  `.unity`, `.prefab`, `.asset` and `.meta` files) are authored in that tool,
+  so authoring them is an **Engineer** task unless the plan and the engineer
+  explicitly say otherwise. The agent never writes generated files.
+- **Build and compile checks.** Find out how the agent can build or
+  compile-check the code, and what needs a human (for example, an editor that
+  must refresh before new modules build). A check only the engineer can run
+  makes the unit **Agent + Engineer**. If the repo's instructions don't say,
+  ask the engineer once, and record the answer in the breakdown's header
+  (**Build check**) so later sessions use the same method.
+- **Things that must arrive together.** If the build ignores something until
+  another piece exists (a new module with no source files, say), create them
+  in the same task, or at least the same unit.
+- **Git.** Follow the repo's branch naming rules. Branches, commits and pushes
+  are the engineer's.
 
 ## Breakdown mode
 
@@ -258,7 +244,8 @@ from the one checked out. Before slicing it:
 - Check that files the plan marks **new** don't already exist, and that no step
   needs a file the plan marks **unchanged**.
 - Check the state the work will start from: the current branch, whether the
-  working tree is clean, and what the Editor has open. A prerequisite the
+  working tree is clean, and anything holding the project open (an editor or
+  tool that would conflict with the agent's changes). A prerequisite the
   engineer must resolve (e.g. uncommitted work on another branch) goes on the
   prerequisite task and into the review.
 - Anything that changes a task's content, boundary or order is a Critical
@@ -300,7 +287,7 @@ from the one checked out. Before slicing it:
   guard tests, and any behaviour its tasks introduce that the plan's items
   don't cover. Never drop a plan item.
 - Write each check so its executor can run it exactly: commands for the agent;
-  for the engineer, numbered Editor steps, each with its expected result. The
+  for the engineer, numbered steps, each with its expected result. The
   engineer's part is read out inline when the unit is validated, so write it as
   instructions, not notes.
 - Write each unit's plain-English summary, then each card's, once the
@@ -372,9 +359,8 @@ it:
 - **Plan drift** (this skill's check): if the plan's `Revision` is newer than
   the breakdown's "Plan read" revision, read the plan's Change Log rows since
   then, re-read the sections they changed, and flag every change that affects
-  the current unit or a later one. (For an older plan pair, compare modified
-  dates instead.) A change that affects a card or a unit's checks is handled
-  through the amendment rules.
+  the current unit or a later one. A change that affects a card or a unit's
+  checks is handled through the amendment rules.
 
 ### 3. Report
 
@@ -468,9 +454,9 @@ When every task in the unit is `Implemented`:
    - a numbered list, one check per item;
    - each item: what to open and do (exact steps), what they should see, and
      what to report back;
-   - name everything concretely: asset and scene paths, menu items, field
-     names, values to set and expect. If the breakdown is vague ("edit a
-     resolved settings asset"), look the concrete target up in the repo first;
+   - name everything concretely: file and asset paths, menu items, field
+     names, values to set and expect. If the breakdown is vague ("edit the
+     settings file"), look the concrete target up in the repo first;
    - edge cases worth trying, as their own items;
    - end with: "Ask me about any step if you need more detail."
 
@@ -578,12 +564,12 @@ for a non-technical colleague such as a producer or designer:
   avoided, explain it in the same sentence.
 - Describe outcomes, not mechanics.
 
-Good: *"Adds the record that stores the result of a bake: where each ship is at
-every moment of the run. Nothing is visible yet; later tasks use it to play the
-run back and to draw each ship's path."*
+Good: *"Adds the place where each user's saved filters are kept, so they're
+still there next time the app opens. Nothing is visible yet; a later task adds
+the screen that uses them."*
 
-Bad: *"Implements `CombatShapeBake` with `GetFrame`/`Sample` (Lerp/Slerp) over a
-`frameCount × n` array."*
+Bad: *"Implements `FilterStore` with `Load`/`Save` over a
+`Dictionary<string, FilterSet>` serialised to JSON."*
 
 ## Templates
 
@@ -599,6 +585,7 @@ Bad: *"Implements `CombatShapeBake` with `GetFrame`/`Sample` (Lerp/Slerp) over a
 - **Task Status (resume here):** <link>
 - **Repo:** `<absolute path>` · base `<branch>` · working branch `<branch, or "created in T00">`
 - **Plan verified against:** `<base>` @ `<short sha>` on <YYYY-MM-DD>
+- **Build check:** <how the agent builds or compile-checks, from the repo's instructions or the engineer; or "engineer only">
 - **ID key:** <each prefix the plan uses and where it is defined>
 
 ## Overview
@@ -651,7 +638,7 @@ Not covered by design: see the plan's Non-Goals (<link>).
 **Why these tasks are validated together:** <one or two sentences: what can only be observed once all of them are done>
 
 **Validation**
-- [ ] <unit check, e.g. "Electrum.X compiles"> (Agent | Engineer | Agent + Engineer)
+- [ ] <unit check, e.g. "the settings module compiles"> (Agent | Engineer | Agent + Engineer)
 - [ ] <plan "Done when" item, verbatim> (plan §N) (Agent | Engineer | Agent + Engineer)
 - [ ] <plan "Done when" item moved here from §M, verbatim> (plan §M; observable from this unit) (Agent | Engineer | Agent + Engineer)
 
@@ -683,9 +670,8 @@ Not covered by design: see the plan's Non-Goals (<link>).
 - Plan: <section link>, for <what to take from it>
 - Plan IDs: `R23` "<one-line excerpt>"; `C1` "<one-line excerpt>"
 - Precedent: `<repo path>:<lines>`, for <the pattern to copy>
-- Repo rules: <only the ones that apply here: AGENTS.md section, guard test, .editorconfig>
-- API docs: <official, version-matched docs (e.g. the Unity Scripting API for the version in
-  `ProjectSettings/ProjectVersion.txt`) for any API with no precedent in the repo>
+- Repo rules: <only the ones that apply here: a section of the agent instructions, a guard test, .editorconfig>
+- API docs: <official docs matching the version the repo pins, for any API with no precedent in the repo>
 
 **Files** (nothing outside this list)
 - new `<path>`: <purpose>

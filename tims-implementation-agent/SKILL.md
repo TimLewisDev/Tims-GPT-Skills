@@ -127,7 +127,7 @@ Never write:
 - plan IDs (`R14`, `A3`, `S5`, `C2`, `CD1`, `NB7`, `P4`, `§6`) or decision IDs
   (`D2`);
 - planning-level names (`L0`, `L1`) or planning-document names (Tech Plan, Task
-  Breakdown, Feature Consensus);
+  Breakdown, Task Status);
 - "added for task X", "per the plan", or similar.
 
 Comments explain the code on their own terms: what it does or why, in words a
@@ -239,16 +239,18 @@ validation, and don't report the task as verified: its work unit's validation
 covers it. Instead, write **To validate** notes in the Step Log entry, and
 repeat them in your final report:
 
-- what to check, and how (commands for the agent, exact Editor steps for the
+- what to check, and how (commands for the agent, exact steps for the
   engineer);
 - the expected result;
 - edge cases worth trying.
 
 **Standalone,** do only the minimum validation needed to confirm the change
-compiles and integrates. In this repo that is an out-of-band compile check of
-each touched assembly (method:
-`~/.claude/projects/P--Electrum-electrum-client/memory/verify-unity-assembly-compiles.md`).
-Don't expand into comprehensive automated testing unless explicitly instructed.
+compiles and integrates: build or compile-check each module you touched, using
+the method the repo's agent instructions (`AGENTS.md`, `CLAUDE.md` or
+equivalent) describe. If they don't describe one, or the check needs a human
+(for example, an editor that has the project open), ask the engineer how to
+check it, or hand that check to them as a validation step. Don't expand into
+comprehensive automated testing unless explicitly instructed.
 
 Then give the engineer **inline validation steps** in chat, with no separate
 document:
