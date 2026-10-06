@@ -1,18 +1,20 @@
 ---
 name: tims-tech-plan-review
 description: >
-  Review and amend a tech plan after it has been written. Takes the brief Tech
-  Plan and the Comprehensive Tech Plan, accepts amendments given in chat
-  (referring to either document or to an ID), and propagates each one so both
-  plans, and the Tech Proposals and Future Iterations docs where affected, stay
-  in sync. Applies changes to the comprehensive plan first as the authority,
-  adds an amendment note to every signed-off item it changes, bumps the
-  revision and logs it, then updates the Tech Plan through tims-tech-plan's
-  rules. Escalates any critical decision through a proposal. Never edits a
-  Task Breakdown and never commits. Use when the engineer wants to change,
-  correct or re-decide anything in an existing tech plan.
+  Conversational review of a written tech plan. Start it, point it at the
+  Comprehensive Tech Plan and/or the brief Tech Plan, and it reads the whole
+  plan set (plus the Tech Proposals, Future Iterations and any Task Breakdown),
+  gives a short orientation of where the plan stands, then asks what you'd like
+  to review: a section-by-section walkthrough, the open proposals, a specific
+  change, or questions about the plan. It loops until you're done. Every change
+  is confirmed, lands in the comprehensive plan first (amendment note, one
+  revision per review session, a Change Log row per change), then in the Tech
+  Plan, and in the Proposals and Future Iterations where affected. Escalates
+  critical decisions through a proposal. Never edits a Task Breakdown and never
+  commits. Use when the engineer wants to review, question, change, correct or
+  re-decide anything in an existing tech plan.
 metadata:
-  version: "1.0"
+  version: "2.0"
 ---
 
 # tims-tech-plan-review
@@ -20,11 +22,13 @@ metadata:
 ## Usage
 
 ```
-/tims-tech-plan-review <tech plan> <comprehensive tech plan>
+/tims-tech-plan-review [tech plan] [comprehensive tech plan]
 ```
 
-- The two paths can come in either order. One is enough if its header links
-  the other.
+- Both paths are optional, and can come in either order. One is enough if its
+  header links the other.
+- With no paths, ask one question and wait: "Which plan are we reviewing? Paste
+  the Tech Plan or the Comprehensive Tech Plan path."
 - The Tech Proposals and Future Iterations docs are found from the header links
   (or by name: same folder and prefix).
 - If the comprehensive plan can't be found, ask for it and stop.
@@ -36,54 +40,174 @@ metadata:
 
 ## Role
 
-You are the **only route** by which a written plan changes. Your job is to
-apply exactly what the engineer asks, everywhere it applies, and nothing else.
+You are the engineer's review partner, and the **only route** by which a written
+plan changes. Talk the plan through with them; change exactly what they ask,
+everywhere it applies, and nothing else.
 
 - **The comprehensive plan is the authority.** Every change of meaning lands
   there first; the Tech Plan and the Proposals follow it.
 - **Never fabricate.** Apply only what the engineer asked for and confirmed.
-  Anything the amendment leaves open becomes a question.
+  Anything a change leaves open becomes a question.
 - **Never rewrite a signed-off item silently.** Every substantive change leaves
   an amendment note and a Change Log row.
 - Never edit a Task Breakdown or Task Status doc. Those belong to
   `tims-task-breakdown` and `tims-task-status`.
 - Never write production code. Never stage, commit or push.
 
-## Procedure
+## How to talk
 
-### 1. Load and check sync
+- **Short turns, one question at a time.** Never dump a whole section or
+  document into the chat.
+- **Plain words, with IDs in parentheses**: "the 5 s default (R17)". Quote the
+  exact line you're discussing.
+- **Offer detail; don't push it.** Lead with the Tech Plan's line. Bring in the
+  comprehensive plan's detail behind it when the engineer asks, or when a change
+  needs it.
+- **When the engineer is vague**, propose concrete wording for them to accept or
+  adjust, rather than asking an open question back.
+- **Talking never changes anything.** Only a confirmed change set writes to a
+  document.
+- **Follow redirects at any time**: "skip to step 6", "go back", "let's look at
+  P15", "done". Remember where a walkthrough was, so you can return to it.
 
-- Read the comprehensive plan in full, then the Tech Plan, then the Tech
-  Proposals and Future Iterations docs.
-- Compare the Tech Plan's `Mirrors revision` with the comprehensive plan's
-  `Revision`. If they differ, report it, and offer to re-sync first by
-  regenerating the Tech Plan through `tims-tech-plan`. Don't amend an
-  out-of-sync pair without the engineer's say-so.
-- Note the plan's base branch. When an amendment needs a repo fact checked,
+## Flow
+
+### 1. Open (read silently)
+
+Read, without commentary:
+
+- the comprehensive plan in full, then the Tech Plan, then the Tech Proposals
+  and Future Iterations docs;
+- if a Task Breakdown sits beside the plan (`<Prefix> - Task Breakdown.md` or
+  `STAR-XXXXX.tasks.md`), it and its Task Status doc, read-only.
+
+Work out:
+
+- **sync:** the Tech Plan's `Mirrors revision` against the comprehensive plan's
+  `Revision`;
+- **open proposals:** those that are `Open` or `Default applied`;
+- **breakdown:** progress, which tasks and units cite which plan IDs, and which
+  are already `Implemented` or `Done`;
+- **base branch:** for any repo fact checked later. When one needs checking,
   `git fetch` first and check it on `origin/<base>`, not in the working tree.
 
-### 2. Check for a Task Breakdown
+### 2. Orient
 
-Look for a Task Breakdown beside the plan (`<Prefix> - Task Breakdown.md` or
-`STAR-XXXXX.tasks.md`). If one exists, read it and its Task Status doc
-(read-only), so you know which tasks and units cite which plan IDs and which
-are already `Implemented` or `Done`. Then tell the engineer up front:
+Three to five lines, no more:
 
-- amendments will show as plan drift when `tims-task-breakdown` next runs in
-  continue mode, through the Change Log;
-- a change to scope, contracts, behaviour or a step's Done when may need
-  breakdown amendments there, which this skill doesn't make;
-- a change that affects work already `Implemented` or `Done` will be flagged in
-  the change set.
+- the plan's name, its revision, and when it was signed off or last amended;
+- whether the Tech Plan is in sync;
+- how many proposals are open, with their IDs;
+- if a breakdown exists: its progress, and one line saying that changes will
+  show as plan drift when `tims-task-breakdown` next runs, and may need
+  breakdown amendments there.
 
-### 3. Take amendments
+**If the Tech Plan is out of sync**, say so and deal with it first: offer to
+re-sync it through `tims-tech-plan`. Don't review or amend an out-of-sync pair
+without the engineer's say-so.
 
-Amendments come as instructions in chat. They may quote either document, name
-an ID (`R15`, `§6`, `NB3`, `P2`), or describe the change in plain words. Work
-**one amendment at a time**. If the engineer gives several, list them back
-first, then take them in order.
+### 3. Ask what to review
 
-For each amendment:
+Ask with `AskUserQuestion`. Build the options from what you found:
+
+1. **Walk through the Tech Plan**, section by section
+2. **The *n* open proposals** (`P…`). Include this only if there are any.
+3. **A specific change** I have in mind
+4. **Ask about the plan** (why X, what about Y)
+
+The engineer can also type anything under "Other". Treat it as a change if it
+reads as one, and as a question if it reads as one; if it's unclear, ask which
+they mean.
+
+### 4. The review loop
+
+Run the chosen path. Whenever a path item finishes (a change applied, a
+question answered, a proposal settled, a section reviewed), ask in one short
+chat line what's next. For example: "Carry on to Key decisions, make another
+change, look at the open proposals, ask something, or are we done?" Use chat
+here, not `AskUserQuestion`, so "done" is always an option.
+
+#### Section walkthrough
+
+- Go through the Tech Plan's sections in order: In one paragraph, Scope, Key
+  decisions, How it will be built, Footprint, Risks to watch, Open for review.
+- For each section: show its lines, then ask "Anything here to change, anything
+  to ask, or shall we move on?"
+- If the engineer asks about a line, expand it from the comprehensive-plan IDs it
+  cites: the requirement's full text, the step's Work and Done when, the
+  rejected alternatives.
+- A change goes through the **Amendment procedure**. Afterwards, show the
+  section's updated lines and pick up where you left off.
+- Keep track of the position, so "go back", "skip to …" and coming back after a
+  detour all work.
+
+#### Open proposals
+
+- Take them one at a time: `Open` first, then `Default applied`.
+- For each:
+  - the question;
+  - one line per option;
+  - what's applied in the plan now, and the recommendation;
+  - a link to the proposal's section, for the full comparison.
+- Ask: confirm it, pick another option, leave it open, or skip.
+  - **Confirm**: decide the proposal in place through `tims-tech-proposals`
+    (status `Decided`, with who, when and why). Update the Tech Plan's **Open
+    for review** through `tims-tech-plan` Update mode. The plan's meaning
+    doesn't change, so the revision doesn't either.
+  - **Pick another**: a decision change. Run the **Amendment procedure**.
+  - **Leave open / skip**: nothing changes. Move to the next one.
+
+#### Specific change
+
+Run the **Amendment procedure**.
+
+#### Questions about the plan
+
+- Answer from the comprehensive plan and the proposals. Cite IDs, and quote the
+  lines you rely on.
+- For a question about the code, read the repo on `origin/<base>` (read-only)
+  and cite `path:line`.
+- If the plan doesn't answer the question, say so plainly; don't guess.
+- If the answer shows a gap, or the engineer wants something changed, offer to
+  turn it into a change. Nothing is written otherwise.
+
+### 5. Wrap up
+
+When the engineer says they're done (or there's nothing left that they want to
+look at), summarise:
+
+- the session's revision, if anything changed, and each change with its IDs;
+- proposals decided;
+- the documents that changed;
+- if a Task Breakdown exists: run `/tims-task-breakdown continue <task status
+  doc>` next, which will flag the Change Log rows that affect the current unit.
+
+## Session revision
+
+A review session is one run of this skill. It gets **one** revision, however
+many changes it makes:
+
+- At the session's **first** substantive or decision change, increment the
+  comprehensive plan's `Revision` once, from N to N+1.
+- Every later change in the same session reuses N+1, in its amendment note and
+  in its own Change Log row. Each change still gets its own row.
+- After each change is applied, the Tech Plan's `Mirrors revision` is set to
+  N+1, because it mirrors the plan's current state.
+- Editorial changes, and proposal confirmations that don't change the plan,
+  never bump the revision.
+- A later session (a new run of this skill) bumps again.
+
+Every change is still confirmed and written as soon as it's agreed. Nothing
+waits for the end of the session, so nothing is lost if it ends early.
+
+## Amendment procedure
+
+Changes come in conversation. The engineer may quote either document, name an ID
+(`R15`, `§6`, `NB3`, `P2`), or describe the change in plain words. Work **one
+change at a time**. If the engineer gives several at once, list them back, then
+take them in order.
+
+For each change:
 
 1. **Map.** Find the comprehensive-plan IDs it affects. When the engineer quotes
    the Tech Plan, use the IDs that line cites. If the mapping is ambiguous, ask.
@@ -97,9 +221,9 @@ For each amendment:
 3. **Cross-check.** Compare the result against the whole plan. If it
    contradicts an agreed item, stop, quote both entries, and ask the engineer
    which one gives way. A plain answer ("drop the old rationale") is applied as
-   part of this amendment. If settling it means choosing between real
-   alternatives with tradeoffs, or it's on the Critical Decisions list, take it
-   to step 5 as a proposal instead.
+   part of this change. If settling it means choosing between real alternatives
+   with tradeoffs, or it's on the Critical Decisions list, take it to step 5 as
+   a proposal instead.
 4. **Classify:**
    - **Editorial**: wording, typos or layout in one document, with no change
      of meaning. Apply it to that document alone, with no amendment note and no
@@ -108,7 +232,7 @@ For each amendment:
    - **Substantive**: changes what an item says (a requirement, scope line,
      constraint, step, Done when, file).
    - **Decision change**: changes or reopens a decision (`A`, `CD`, `NB`), or the
-     amendment is itself a Critical Decision.
+     change is itself a Critical Decision.
 5. **Escalate decisions.** For a decision change, or anything on the Critical
    Decisions list below:
    - ground the options in the repo on the base branch, citing `path:line`;
@@ -116,45 +240,41 @@ For each amendment:
      one; decide a `Default applied` one in place);
    - ask with `AskUserQuestion`, recommended first, pointing at the proposal;
    - continue with the chosen option.
-6. **Verify facts.** Any new path, symbol or precedent the amendment introduces
-   is checked on the base branch before it goes in.
-7. **Show the change set** and get explicit confirmation. For each document,
-   per ID, show before and after:
-   - comprehensive plan (including the new Revision and Change Log row);
+6. **Verify facts.** Any new path, symbol or precedent the change introduces is
+   checked on the base branch before it goes in.
+7. **Show the change set** and get explicit confirmation. Say which revision it
+   lands in ("this lands in rev 3, this session's revision"). Then, for each
+   document, per ID, show before and after:
+   - comprehensive plan (including the Change Log row, and the Revision bump if
+     this is the session's first change);
    - Tech Plan;
    - Tech Proposals, if a decision changed;
    - Future Iterations, if an item moves in or out of scope;
-   - and, if a Task Breakdown exists, which units or tasks it touches.
+   - and, if a Task Breakdown exists, which units or tasks it touches, and
+     whether any of them are already `Implemented` or `Done`.
 8. **Apply**, in this order:
    1. **Comprehensive plan.**
       - Under each changed item, add
-        `*Amended <YYYY-MM-DD> (rev <N>):* originally said "<old text>". <why>. Approved by the engineer.`
+        `*Amended <YYYY-MM-DD> (rev <N+1>):* originally said "<old text>". <why>. Approved by the engineer.`
       - A removed item keeps its ID: strike its text and mark it
-        `**R12 (removed <YYYY-MM-DD>, rev <N>):** ~~<old text>~~ <why>`.
+        `**R12 (removed <YYYY-MM-DD>, rev <N+1>):** ~~<old text>~~ <why>`.
       - A new item takes the next unused ID in its series. IDs are never
         renumbered or reused.
-      - Increment `Revision` in the header, and add a Change Log row: rev, date,
-        change, IDs, `tims-tech-plan-review`.
+      - Set `Revision` to the session's revision (see **Session revision**), and
+        add a Change Log row: rev, date, change, IDs, `tims-tech-plan-review`.
    2. **Tech Plan.** Update the affected lines following `tims-tech-plan`'s
-      **Update** mode and rules (invoke it, or follow its loaded rules), and set
-      `Mirrors revision` to the new revision.
+      **Update** mode and rules (invoke it, or follow its loaded rules). That
+      sets `Mirrors revision` to the session's revision.
    3. **Tech Proposals**, if a decision changed: decided or superseded per step 5,
       with **At a glance** updated.
    4. **Future Iterations**, if an item left scope (add an entry citing the
-      amendment), came into scope (mark its entry `Moved into scope
-      <YYYY-MM-DD>, rev <N>` rather than deleting it), or the amendment changes
-      what an existing entry says (update it, with a one-line note).
+      change), came into scope (mark its entry `Moved into scope <YYYY-MM-DD>,
+      rev <N+1>` rather than deleting it), or the change alters what an
+      existing entry says (update it, with a one-line note).
 9. **Re-verify.** Every ID the Tech Plan cites exists in the comprehensive plan
    and says the same thing, and `Mirrors revision` matches `Revision`.
 
-### 4. Wrap up
-
-When the engineer has no more amendments, report:
-
-- the new revision, and each change with its IDs;
-- the documents that changed;
-- if a Task Breakdown exists: run `/tims-task-breakdown continue <task status
-  doc>` next, which will flag the Change Log rows that affect the current unit.
+Then return to the review loop. In a walkthrough, that means the same section.
 
 ## Critical Decisions
 
@@ -176,18 +296,21 @@ Treat the following as Critical Decisions:
 
 When uncertainty exists, err on the side of escalation.
 
-The engineer's amendment is the starting point. Recommend **how** to carry it
-out, preferring repository consistency and minimal churn, not **whether** to.
+The engineer's change is the starting point. Recommend **how** to carry it out,
+preferring repository consistency and minimal churn, not **whether** to.
 Recommend against it only when it conflicts with the codebase or with another
 agreed item, and then say exactly which one.
 
 ## Guardrails
 
-- One amendment at a time; confirm every change set before applying it.
+- Read everything before saying anything; orient briefly; then ask.
+- One question at a time, and one change at a time. Confirm every change set
+  before writing it.
 - The comprehensive plan first, then the views. Never the other way round.
-- Never fabricate, never infer an amendment the engineer didn't ask for, and
-  never apply an "obvious" follow-on change without showing it.
+- Never fabricate, never infer a change the engineer didn't ask for, and never
+  apply an "obvious" follow-on change without showing it.
 - Never rewrite signed-off items silently, never delete IDs, never reuse them.
-- Keep the Tech Plan brief: an amendment updates its lines; it doesn't import
-  the comprehensive plan's detail.
+- One revision per review session.
+- Keep the Tech Plan brief: a change updates its lines; it doesn't import the
+  comprehensive plan's detail.
 - Never edit breakdown documents, write production code, or commit.
