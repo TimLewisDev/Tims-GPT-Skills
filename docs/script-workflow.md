@@ -46,11 +46,19 @@ Nothing changes in how you start the skills:
    runs first, without subagents. Then come the tasks, then the unit's checks,
    then your checklist in chat. Answer each check as before; the skill records
    it.
-4. **Measure (optional):** start Claude Code with
-   `TIMS_METRICS_LABEL="<what you're testing>" claude`. Afterwards, read
-   `tools/metrics/token-log.md`, or run
-   `bash tools/transcript-metrics.sh --detail <session> ~/.claude/projects/<project>`.
-   To turn logging off, set `TIMS_METRICS=off`.
+4. **Measure.** Once the `SessionEnd` hook is in your user settings (see
+   the README's Token log section), every session that uses a `tims-*` skill
+   adds a row to `tools/metrics/token-log.md` when it ends. End it with
+   `/exit`; a killed window may not record. To label the run:
+   - from Git Bash, start with `TIMS_METRICS_LABEL="<what you're testing>" claude`;
+     from PowerShell, `$env:TIMS_METRICS_LABEL = "<…>"; claude`;
+   - or, from anywhere, label it afterwards (this also records a session the
+     hook missed):
+     `bash tools/transcript-metrics.sh --record tools/metrics/token-log.md --session <id> --label "<…>" ~/.claude/projects/<project>`.
+     `--tokens --since <date>` lists recent sessions and their IDs.
+
+   For one session's breakdown by subagent, run `--detail <id>`. To stop
+   logging, set `TIMS_METRICS=off` the same way, or remove the hook.
 
 Two things are new for you to know:
 
