@@ -13,7 +13,14 @@ They are instructions and document templates, not code.
 
 | Skill | What it does |
 |---|---|
-| [`tims-adversarial-plan`](tims-adversarial-plan/SKILL.md) | Interviews you about a feature, pressure-tests it against the repo, and writes the plan once you sign off. |
+| [`tims-familiarise`](tims-familiarise/SKILL.md) | Explores a part of the codebase with you, a question at a time, until you've pinned down what you actually care about. |
+| [`tims-familiarisation-doc`](tims-familiarisation-doc/SKILL.md) | Writes up only the part of that exploration you said you're interested in, as a readable doc. |
+| [`tims-adversarial-plan`](tims-adversarial-plan/SKILL.md) | Runs planning stage by stage, has an adversary challenge each stage, and gets you to a signed-off plan. |
+| [`tims-requirements`](tims-requirements/SKILL.md) | Planning stage 1: pins down what the feature must do. |
+| [`tims-scope`](tims-scope/SKILL.md) | Planning stage 2: what the feature is and isn't, and the hard constraints. |
+| [`tims-approach`](tims-approach/SKILL.md) | Planning stage 3: weighs candidate approaches against the repo and records the choice. |
+| [`tims-technical-design`](tims-technical-design/SKILL.md) | Planning stage 4: verifies repo facts, resolves critical decisions, outlines the steps. |
+| [`tims-plan-signoff`](tims-plan-signoff/SKILL.md) | Final stage: your sign-off, then the finished plan, Tech Plan and Future Iterations. |
 | [`tims-tech-proposals`](tims-tech-proposals/SKILL.md) | Lays out each decision's options side by side for review, and records what was chosen. |
 | [`tims-tech-plan`](tims-tech-plan/SKILL.md) | Writes a short, five-minute summary of the plan for reviewers. |
 | [`tims-tech-plan-review`](tims-tech-plan-review/SKILL.md) | Talks a written plan through with you, answers questions, and makes the changes you confirm. |
@@ -21,19 +28,29 @@ They are instructions and document templates, not code.
 | [`tims-task-status`](tims-task-status/SKILL.md) | Keeps the progress record that lets any new session pick up where the last one stopped. |
 | [`tims-implementation-agent`](tims-implementation-agent/SKILL.md) | Writes the code for one task (or a small plan), strictly within scope. |
 | [`tims-mr-review`](tims-mr-review/SKILL.md) | Reviews a GitLab merge request and posts only the comments you approve. |
-| [`tims-common`](tims-common/SKILL.md) | Not run directly: the shared rules for long runs and the helper scripts the other skills call. |
+| [`tims-common`](tims-common/SKILL.md) | Not run directly: the shared rules for long runs and for planning, shared templates, and the helper scripts the other skills call. |
 
 ## How they fit together
 
 ```text
-Idea, spec or ticket
-  │
-  ▼
-tims-adversarial-plan ──(live)──► tims-tech-proposals ──► Tech Proposals
-  │  on sign-off, writes:
-  ├─► Comprehensive Tech Plan   (the authority)
-  ├─► Future Iterations         (only if work was left out)
-  └─► tims-tech-plan ──────────► Tech Plan (brief summary for review)
+"I want to explore how X works"          Spec or ticket
+  │                                        │
+  ▼                                        │
+tims-familiarise ──► Focus Log             │
+tims-familiarisation-doc ──► Familiarisation
+  │                                        │
+  ▼                                        ▼
+tims-adversarial-plan (orchestrator), one stage at a time:
+  ├─ tims-requirements       ┐ each writes into the draft
+  ├─ tims-scope              │ Comprehensive Tech Plan, with
+  ├─ tims-approach           │ decisions via tims-tech-proposals ──► Tech Proposals
+  ├─ tims-technical-design   ┘
+  │    after every stage (and the whole plan): an adversary subagent ──► Challenges
+  │    then a break point: carry on, or resume in a fresh session
+  └─ tims-plan-signoff, on your sign-off, writes:
+       ├─► Comprehensive Tech Plan   (the authority)
+       ├─► Future Iterations         (only if work was left out)
+       └─► tims-tech-plan ──────────► Tech Plan (brief summary for review)
   │
   ▼
 You review the Tech Plan and Proposals
@@ -55,25 +72,37 @@ tims-mr-review stands apart: run it on any open GitLab MR.
 
 In order:
 
-1. **Plan.** `tims-adversarial-plan` asks one question at a time and keeps a
-   visible *Consensus Ledger* of everything agreed. Each choice between options
-   becomes a proposal you can read before deciding. It only finishes when you
-   explicitly sign off the whole ledger.
-2. **Review.** Read the Tech Plan and Tech Proposals. Run
+1. **Explore (optional).** `tims-familiarise` starts from a loose question,
+   shows you the code a piece at a time and follows your lead until the focus
+   is clear. `tims-familiarisation-doc` writes up just that focus. The doc
+   stands on its own, and it's where planning starts.
+2. **Plan.** `tims-adversarial-plan` runs the stages in order. Each stage asks
+   one question at a time and adds what you agree to the *Consensus Ledger* in
+   the draft plan. Each choice between options becomes a proposal you can read
+   before deciding. After each stage, an adversary that sees only the written
+   documents and the code attacks the stage's reasoning, and you settle each
+   challenge. You can stop after any stage and resume later in a fresh
+   session. Planning only finishes when you explicitly sign off the whole
+   ledger.
+3. **Review.** Read the Tech Plan and Tech Proposals. Run
    `tims-tech-plan-review` to walk through the plan, ask about it, or change it.
-3. **Break down.** `tims-task-breakdown` checks the plan against the repo,
+4. **Break down.** `tims-task-breakdown` checks the plan against the repo,
    proposes tasks and work units, and writes them once you approve.
-4. **Build and validate, one unit at a time.** Continue mode picks up from the
+5. **Build and validate, one unit at a time.** Continue mode picks up from the
    Task Status, does the unit's tasks, then validates the whole unit. It stops
    after each unit.
-5. **Commit and publish yourself.** No skill stages, commits, pushes or creates
+6. **Commit and publish yourself.** No skill stages, commits, pushes or creates
    branches. Once there's an MR, `tims-mr-review` can review it.
 
 ## Where to start
 
 | You want to… | Run |
 |---|---|
-| plan a feature from an idea, spec or ticket | `/tims-adversarial-plan [description, spec or ticket]` |
+| explore how something in the codebase works | `/tims-familiarise <what you want to explore>` |
+| write up an exploration | `/tims-familiarisation-doc [focus log]` |
+| plan a feature from an idea, exploration, spec or ticket | `/tims-adversarial-plan [description, familiarisation doc, spec or ticket]` |
+| carry on planning (next stage, or the pending challenge) | `/tims-adversarial-plan resume <draft plan>` |
+| work on one planning stage in its own session | `/tims-requirements`, `/tims-scope`, `/tims-approach`, `/tims-technical-design` or `/tims-plan-signoff` `<draft plan>` |
 | review, question or change a written plan | `/tims-tech-plan-review [tech plan] [comprehensive tech plan]` |
 | break a signed-off plan into tasks | `/tims-task-breakdown <comprehensive tech plan>` |
 | carry on building | `/tims-task-breakdown continue <task status doc>` |
@@ -84,7 +113,7 @@ In order:
 | review a GitLab MR | `/tims-mr-review [MR number or branch]` |
 
 `[…]` is optional and `<…>` is required. If you're new to these skills, start with
-`tims-adversarial-plan`.
+`tims-adversarial-plan`; it offers to explore the code first when that helps.
 
 ## Key ideas
 
@@ -97,10 +126,12 @@ elsewhere.
 
 | Document | File name | Written by | What it's for |
 |---|---|---|---|
-| Comprehensive Tech Plan | `<Prefix> - Comprehensive Tech Plan.md` | `tims-adversarial-plan`; changed only through `tims-tech-plan-review` | The authority: requirements, approach, scope, constraints, decisions, verified repo facts and step-by-step design. |
+| Familiarisation | `<Prefix> - Familiarisation.md` | `tims-familiarisation-doc` | How the part of the code you care about works today, with open questions. Description only; where planning starts. |
+| Comprehensive Tech Plan | `<Prefix> - Comprehensive Tech Plan.md` | the planning stages, run by `tims-adversarial-plan`; changed only through `tims-tech-plan-review` once signed off | The authority: requirements, approach, scope, constraints, decisions, verified repo facts and step-by-step design. While it's a draft, its **Stages** table records where planning is. |
 | Tech Proposals | `<Prefix> - Tech Proposals.md` | `tims-tech-proposals` | Each decision's options, the recommendation, and the outcome. |
+| Challenges | `<Prefix> - Challenges.md` | `tims-adversarial-plan` | What each stage's adversary attacked, the evidence, and how you settled it. |
 | Tech Plan | `<Prefix> - Tech Plan.md` | `tims-tech-plan` | A brief view of the comprehensive plan. Adds nothing of its own. |
-| Future Iterations | `<Prefix> - Future Iterations.md` | `tims-adversarial-plan` | Work that came up and was deliberately left out. |
+| Future Iterations | `<Prefix> - Future Iterations.md` | `tims-plan-signoff` | Work that came up and was deliberately left out. |
 | Task Breakdown | `<Prefix> - Task Breakdown.md` | `tims-task-breakdown` | Task cards and work units, each with an *In plain English* summary for non-technical readers. |
 | Task Status | `<Prefix> - Task Status.md` | `tims-task-status` | Progress, logs, decisions and validation results. A new session reads this first. |
 
@@ -109,8 +140,8 @@ elsewhere.
 Everything agreed in planning gets a stable ID that is never renumbered or
 reused: `R` requirements, `A` approach, `S` scope and non-goals, `C`
 constraints, `CD` blocking decisions, `NB` non-blocking review items, `P`
-proposals, `§N` plan steps. Every line of the Tech Plan cites the IDs it
-summarises.
+proposals, `CH` challenges, `§N` plan steps. Every line of the Tech Plan cites
+the IDs it summarises.
 
 The comprehensive plan has a `Revision` and a Change Log. Each review session
 that changes its meaning bumps the revision once, and every change leaves an
@@ -152,6 +183,12 @@ and one ever-growing conversation gets slow. So the skills follow
   checking every reference a plan cites, writing task cards from a skeleton
   you've approved, audits, and rendering the Tech Plan. Questions, decisions
   and design writing always stay in the main conversation.
+- **The adversary is a subagent too**, on the default model because it weighs
+  reasoning. It gets only the documents and the code, never the conversation,
+  so it also tests whether each stage's handover stands on its own.
+- **Planning is split into stages** so no session has to hold all of it. Each
+  stage reads only the sections it needs from disk, and the draft plan's
+  Stages table says where to pick up.
 - **Implementation is one subagent per task**, so the conversation that
   coordinates a work unit stays small. The coordinator is the only writer of
   the Task Status.
@@ -173,27 +210,82 @@ and records the answer.
 
 ## Skill reference
 
+### [`tims-familiarise`](tims-familiarise/SKILL.md): explore the code
+
+A guide, not a planner: you start with a loose question, and it shows you the
+code a piece at a time until you've boiled it down to what you care about.
+
+- **Run it:** `/tims-familiarise <what you want to explore>`, e.g. "how
+  notifications are sent when an order ships"; carry on later with
+  `/tims-familiarise resume <focus log>`.
+- **How a session goes:** it asks why you're exploring (to change, debug,
+  plan or learn), maps the area with read-only subagents, describes what it
+  finds in plain words with `path:line` references and small diagrams, then
+  asks which way to dig. Every few turns it plays back what it thinks you're
+  really after and asks you to rate the topics: **Focus**, **Context** or
+  **Parked**.
+- **Writes:** a Focus Log in `.tims/<Prefix> - Familiarisation/`, updated
+  every turn, so a fresh session can carry on or write it up.
+- **Won't:** design, recommend or plan, or decide for you what you're
+  interested in.
+
+### [`tims-familiarisation-doc`](tims-familiarisation-doc/SKILL.md): write up the exploration
+
+- **Run it:** `/tims-familiarisation-doc [focus log]`, straight after
+  exploring or in a fresh session.
+- **Writes:** `<Prefix> - Familiarisation.md`, covering only your Focus
+  topics and the context needed to read them: the question, the answer in
+  short, how it works today, key parts, data and contracts, rules the code
+  imposes, gotchas, open questions (not agreed), and what was left out. Every
+  reference is checked at the pinned commit.
+- **Then:** read it on its own, or plan from it with
+  `/tims-adversarial-plan <familiarisation doc>`.
+
 ### [`tims-adversarial-plan`](tims-adversarial-plan/SKILL.md): plan a feature
 
-Acts as a *collaborative adversary*: challenges assumptions, probes edge cases
-and pushes for an explicit "is / is not" scope, without blocking progress.
+An orchestrator. It runs the planning stages in order, has an adversary
+challenge each one, and only finishes on your explicit sign-off.
 
-- **Run it:** `/tims-adversarial-plan [description, spec or ticket]`; resume a
-  stalled or long session with `/tims-adversarial-plan resume <draft plan>`.
-- **The Ledger is on disk:** the Comprehensive Tech Plan exists from the start
+- **Run it:** `/tims-adversarial-plan [description, familiarisation doc, spec
+  or ticket]`; carry on with `/tims-adversarial-plan resume <draft plan>`.
+- **Stages:** familiarisation (optional) → `tims-requirements` →
+  `tims-scope` → `tims-approach` → `tims-technical-design` → a whole-plan
+  challenge → `tims-plan-signoff`. Each stage is a skill of its own that writes
+  its Ledger sections into the draft plan. Shared rules live in
+  [`tims-common/planning-protocol.md`](tims-common/planning-protocol.md).
+- **The adversary:** after each stage, a subagent that sees only the written
+  documents and the code attacks that stage's assumptions, using the stage's
+  own `challenge-lens.md`. Every challenge is put to you: accept and change,
+  rebut, or defer. The outcomes are kept in `<Prefix> - Challenges.md`. A
+  stage closes only when no blocking challenge is still unresolved.
+- **Break points:** after each stage it summarises, gives the resume command,
+  and asks whether to carry on or stop. The draft plan's Stages table is the
+  handover.
+- **The Ledger is on disk:** the Comprehensive Tech Plan exists from Setup
   with Status `Draft`, and fills in as items are agreed. Chat shows only what
   changed. Other skills refuse to work from a `Draft` plan.
-- **Reads → writes:** your intake and the repo → Comprehensive Tech Plan
-  (revision 1), Tech Proposals, Future Iterations (if needed), Tech Plan.
-- **Calls:** `tims-tech-proposals` as each decision comes up;
-  `tims-tech-plan` at hand-off.
-- **Key rules:** one question at a time; at least two approaches, each grounded
-  in the repo's existing patterns (`path:line`); a contradiction stops progress
-  until you resolve it; blocking decisions wait for your choice, while review
-  items apply the recommendation and stay open for review; it never decides
-  you're finished, and "looks fine" doesn't count as sign-off.
+- **Key rules:** one question at a time; a contradiction stops progress until
+  you resolve it, even if it reopens a closed stage; blocking decisions wait
+  for your choice, while review items apply the recommendation and stay open
+  for review; it never decides you're finished, and "looks fine" doesn't count
+  as sign-off.
 - **Won't:** write production code, or add test plans, rollout plans or
   speculative work unless you ask.
+
+### The planning stages
+
+Normally run by `tims-adversarial-plan`. Each can also be run on its own with
+the draft plan's path, to work on one stage in a session of its own. It then
+ends by pointing you to `/tims-adversarial-plan resume <plan>`, so that the
+stage still gets challenged.
+
+| Stage | Settles | Notes |
+|---|---|---|
+| [`tims-requirements`](tims-requirements/SKILL.md) | `R`: what the feature must do | Probes with hypotheticals; builds on the Familiarisation doc's description and open questions; maps the repo in the background if there's no Familiarisation doc. |
+| [`tims-scope`](tims-scope/SKILL.md) | `S`, `C`: what it is and isn't; hard constraints | Seeds non-goals from what the exploration left out, and constraints from the repo's rules; records excluded work for Future Iterations. |
+| [`tims-approach`](tims-approach/SKILL.md) | `A`, Rejected Alternatives | At least two candidates, each researched against the repo by a subagent; the choice is a proposal you decide. |
+| [`tims-technical-design`](tims-technical-design/SKILL.md) | Repo Facts, `CD`, `NB`, step outline | Verifies every claim at the pinned commit; hunts critical decisions; outlines the steps in dependency order. |
+| [`tims-plan-signoff`](tims-plan-signoff/SKILL.md) | sign-off, finished plan set | The termination gate, then the full steps, audits, Revision 1, Tech Plan and Future Iterations. |
 
 ### [`tims-tech-proposals`](tims-tech-proposals/SKILL.md): present decisions
 

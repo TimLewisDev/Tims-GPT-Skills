@@ -6,14 +6,14 @@ usage() {
 	cat >&2 <<'EOF'
 usage: ids.sh defined <doc.md>
        ids.sh cited <doc.md>
-       ids.sh xref [--prefixes R,S,A,C,CD,NB,P,T,WU,§] <citing.md> <defining.md> [<defining.md> ...]
+       ids.sh xref [--prefixes R,S,A,C,CD,CH,NB,P,T,WU,§] <citing.md> <defining.md> [<defining.md> ...]
 
-IDs are R A S C P T (with digits, e.g. R12, T07a), CD NB WU (CD3, NB7, WU2)
+IDs are R A S C P T (with digits, e.g. R12, T07a), CD CH NB WU (CD3, CH2, NB7, WU2)
 and plan steps §N. Text inside code fences and inline code is ignored.
 
 defined  ID<TAB>line<TAB>excerpt for every definition: "**R12:**", "**S3**," or
          "**R12 (removed …):**", a table row whose first cell is the ID
-         ("| CD3 |"), or a heading that starts with the ID ("### §3.",
+         ("| CD3 |", "| CH2 |"), or a heading that starts with the ID ("### §3.",
          "## P4 —", "### T07 —", "## WU1 —").
 cited    ID<TAB>count<TAB>first line, for every ID mentioned. Ranges such as
          "R3–R6", "R3-6" and "§1–§4" cite every ID in between.
@@ -52,7 +52,7 @@ function is_word(c) { return c ~ /[A-Za-z0-9_]/ }
 # Calls cite(id, line) for every ID cited in the line.
 function scan(l, ln,   rest, pos, tok, before, after, pfx, num, m, n2, k, tail) {
 	rest = l; pos = 0
-	while (match(rest, /(CD|NB|WU|[RASCPT])[0-9]+[a-z]?|§[0-9]+[a-z]?/)) {
+	while (match(rest, /(CD|CH|NB|WU|[RASCPT])[0-9]+[a-z]?|§[0-9]+[a-z]?/)) {
 		tok = substr(rest, RSTART, RLENGTH)
 		before = (RSTART > 1) ? substr(rest, RSTART - 1, 1) : ""
 		after = substr(rest, RSTART + RLENGTH, 1)
@@ -77,13 +77,13 @@ function scan(l, ln,   rest, pos, tok, before, after, pfx, num, m, n2, k, tail) 
 }
 # Returns the ID a line defines, or "".
 function definition(l,   t) {
-	if (match(l, /\*\*(CD|NB|WU|[RASCPT])[0-9]+[a-z]?(:| \(|\*\*[:,])/)) {
+	if (match(l, /\*\*(CD|CH|NB|WU|[RASCPT])[0-9]+[a-z]?(:| \(|\*\*[:,])/)) {
 		t = substr(l, RSTART + 2, RLENGTH - 2); sub(/(:| \(|\*\*[:,])$/, "", t); return t
 	}
-	if (match(l, /^\|[ \t]*(\*\*)?(CD|NB|WU|[RASCPT])[0-9]+[a-z]?(\*\*)?[ \t]*\|/)) {
+	if (match(l, /^\|[ \t]*(\*\*)?(CD|CH|NB|WU|[RASCPT])[0-9]+[a-z]?(\*\*)?[ \t]*\|/)) {
 		t = substr(l, RSTART, RLENGTH); gsub(/[| \t*]/, "", t); return t
 	}
-	if (match(l, /^#+[ \t]+((CD|NB|WU|[RASCPT])[0-9]+[a-z]?|§[0-9]+[a-z]?)([.:]|[ \t]|$)/)) {
+	if (match(l, /^#+[ \t]+((CD|CH|NB|WU|[RASCPT])[0-9]+[a-z]?|§[0-9]+[a-z]?)([.:]|[ \t]|$)/)) {
 		t = substr(l, RSTART, RLENGTH); sub(/^#+[ \t]+/, "", t); sub(/[.: \t]$/, "", t); return t
 	}
 	return ""

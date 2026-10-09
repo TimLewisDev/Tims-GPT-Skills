@@ -8,7 +8,7 @@ is completed one part per response, never written whole.
 
 For each step in the draft's outline, in order, write the full step to
 `<draft>/parts/§<N>.md`, ending with `<!-- tims:end -->`, using the step
-layout in `<skill>/templates/comprehensive-plan.md`. Then replace the outline
+layout in `<common>/templates/comprehensive-plan.md`. Then replace the outline
 entry with it: delete the step's outline lines from the draft (a small Edit),
 and when every part is complete,
 
@@ -52,8 +52,8 @@ filled) and **Open Items** into the draft with targeted Edits.
 
 ## 3. Audits (subagents, in parallel, read-only)
 
-- `<skill>/briefs/plan-audit.md` (`model: sonnet`): the plan, `<common>`, repo
-  and `BASE_SHA`.
+- `<skill>/briefs/plan-audit.md` (`model: sonnet`): the plan, the Challenges
+  doc, `<common>`, repo and `BASE_SHA`.
 - `<skill>/briefs/proposals-audit.md` (`model: sonnet`): the plan, the
   proposals doc and `<common>`.
 
@@ -64,8 +64,10 @@ change.
 ## 4. Sign off the plan (main)
 
 Edit the header: Status `Signed off <YYYY-MM-DD> · Revision: 1`, the
-`Verified against` commit and date, and the Change Log row
-(`| 1 | <date> | Signed off | — | tims-adversarial-plan |`).
+`Verified against` commit and date, the links lines (Tech Plan, Tech Proposals,
+Future Iterations, Familiarisation, Challenges), and the Change Log row
+(`| 1 | <date> | Signed off | — | tims-adversarial-plan |`). Delete the draft-only
+**Stages** table.
 
 ## 5. Tech Plan and Future Iterations (subagents, in parallel)
 
@@ -81,7 +83,7 @@ Edit the header: Status `Signed off <YYYY-MM-DD> · Revision: 1`, the
 When both return, check the Tech Plan's IDs:
 
 ```
-bash "<common>/scripts/ids.sh" xref --prefixes R,S,§,A,CD,NB "<tech plan>" "<plan>" "<proposals>"
+bash "<common>/scripts/ids.sh" xref --prefixes R,S,§,A,CD,NB "<tech plan>" "<plan>" "<proposals>" "<challenges>"
 ```
 
 Report anything either subagent escalated (the Tech Plan writer reports gaps it
@@ -89,7 +91,11 @@ found in the plan; don't patch them in the Tech Plan).
 
 ## 6. Hand off
 
-Delete `<draft>` (say so). Give the engineer the four paths and the next steps:
+Delete `<draft>` and, if there is one, the Familiarisation draft folder
+(`.tims/<Prefix> - Familiarisation/`, holding the Focus Log), and say so. Never
+delete the Familiarisation or Challenges docs. Give the engineer the paths of
+every document in the set (plan, Tech Plan, Tech Proposals, Future Iterations if
+written, Familiarisation if any, Challenges) and the next steps:
 
 - review the Tech Plan and the Tech Proposals;
 - amend anything with `/tims-tech-plan-review <tech plan> <comprehensive tech plan>`;

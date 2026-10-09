@@ -3,6 +3,7 @@ name: tims-common
 description: >
   Shared orchestration rules and helper scripts used by the other tims-* skills
   (output budget, checkpointed drafts, subagent briefs and the RESULT contract,
+  the planning protocol shared by the planning stages, shared templates,
   and bash scripts for verifying references, assembling documents, extracting
   sections and cross-checking IDs). Not run directly; the other skills read
   orchestration.md and call scripts/ from here.
@@ -19,6 +20,12 @@ Support files for the `tims-*` skills. Nothing here runs on its own.
 - [`orchestration.md`](orchestration.md): the rules every `tims-*` skill follows
   for output size, drafts on disk, stall recovery, subagents and models. Skills
   that orchestrate read it before they start.
+- [`planning-protocol.md`](planning-protocol.md): the rules every planning
+  stage follows (role, Consensus Ledger, IDs, Setup, the stage contract,
+  contradiction handling, Critical Decisions, proposals and challenge
+  resolution). The planning stages and `tims-adversarial-plan` read it.
+- [`templates/`](templates/): templates shared by more than one skill
+  (`comprehensive-plan.md`, created by whichever stage runs Setup).
 - [`scripts/`](scripts/): POSIX bash plus git helpers. Run them as
   `bash "<this folder>/scripts/<name>.sh" …`. Each one prints usage with `-h`.
 

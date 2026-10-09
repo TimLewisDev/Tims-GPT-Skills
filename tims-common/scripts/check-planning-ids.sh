@@ -15,7 +15,7 @@ current directory's repo). Binary files are skipped.
 plans), wherever they are.
 
 Looks for:
-  id       task, unit, plan and decision IDs: T07 T00b WU3 CD1 NB7 R14 A3 S5
+  id       task, unit, plan, decision and challenge IDs: T07 T00b WU3 CD1 CH2 NB7 R14 A3 S5
            C2 D2 P4, level names L0 L1, and plan steps §6
   phrase   "per the plan", "tech plan", "task breakdown", "task status",
            "added for task", "work unit <n>"
@@ -53,7 +53,7 @@ scan() {
 	{
 		loc = $1; txt = substr($0, length($1) + 2); sub(/\r$/, "", txt)
 		rest = txt; seen = 0
-		while (match(rest, /(T[0-9][0-9][a-z]?|WU[0-9]+|CD[0-9]+|NB[0-9]+|[RACSDP][0-9][0-9]?[0-9]?|L[0-9])/)) {
+		while (match(rest, /(T[0-9][0-9][a-z]?|WU[0-9]+|CD[0-9]+|CH[0-9]+|NB[0-9]+|[RACSDP][0-9][0-9]?[0-9]?|L[0-9])/)) {
 			tok = substr(rest, RSTART, RLENGTH)
 			b = (RSTART > 1) ? substr(rest, RSTART - 1, 1) : ""
 			a = substr(rest, RSTART + RLENGTH, 1)
@@ -101,7 +101,7 @@ fi
 
 # git grep finds candidate lines (skipping binaries); scan() applies the word
 # boundaries, which differ between regex engines.
-pattern='(T[0-9]{2}|WU[0-9]|CD[0-9]|NB[0-9]|[RACSDP][0-9]|L[0-9]|§|[Pp]lan|[Tt]ask|[Ww]ork unit)'
+pattern='(T[0-9]{2}|WU[0-9]|CD[0-9]|CH[0-9]|NB[0-9]|[RACSDP][0-9]|L[0-9]|§|[Pp]lan|[Tt]ask|[Ww]ork unit)'
 if [ -n "$extra" ]; then pattern="$pattern|($extra)"; fi
 git -c core.quotePath=false grep --untracked --no-color -n -I -E "$pattern" -- "${files[@]}" 2>/dev/null |
 	awk '{ i = index($0, ":"); j = index(substr($0, i + 1), ":"); printf "%s\t%s\n", substr($0, 1, i + j - 1), substr($0, i + j + 1) }' |

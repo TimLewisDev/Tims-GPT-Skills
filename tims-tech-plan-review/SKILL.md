@@ -30,7 +30,10 @@ metadata:
 - With no paths, ask one question and wait: "Which plan are we reviewing? Paste
   the Tech Plan or the Comprehensive Tech Plan path."
 - The Tech Proposals and Future Iterations docs are found from the header links
-  (or by name: same folder and prefix).
+  (or by name: same folder and prefix). So are the Familiarisation and
+  Challenges docs, if the plan has them: read-only context (what the code does
+  today, and which assumptions were challenged and how they were settled).
+  Review never edits them.
 - If the comprehensive plan can't be found, ask for it and stop.
 
 ## Role

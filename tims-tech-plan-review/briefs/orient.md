@@ -12,10 +12,10 @@ Read `<common>/orchestration.md` section 4 first.
 ## Do
 
 1. Find the set: the comprehensive plan (from the Tech Plan's header link if
-   needed), the Tech Plan, the Tech Proposals and Future Iterations (header
-   links, or same folder and prefix), and, if they exist beside the plan, the
-   Task Breakdown and Task Status. If the comprehensive plan can't be found,
-   return `status: blocked`.
+   needed), the Tech Plan, the Tech Proposals, Future Iterations,
+   Familiarisation and Challenges (header links, or same folder and prefix),
+   and, if they exist beside the plan, the Task Breakdown and Task Status. If
+   the comprehensive plan can't be found, return `status: blocked`.
 2. Work out:
    - **sync:** the Tech Plan's `Mirrors revision` against the plan's `Revision`;
    - **plan:** name, Revision, Status line (signed off or last amended, date);
@@ -39,6 +39,7 @@ Read `<common>/orchestration.md` section 4 first.
 - Tech Plan: <path> · mirrors rev <M> · <in sync | out of sync>
 - Proposals: <path> · open: <P IDs with status, or none>
 - Future Iterations: <path or none>
+- Familiarisation: <path or none> · Challenges: <path, counts by outcome, or none>
 - Breakdown: <path, progress, or none> · Task Status: <path or none>
 - Base branch: `<base>`
 

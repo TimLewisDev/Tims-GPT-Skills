@@ -4,7 +4,8 @@ You check a plan the engineer has signed off, before it's marked final, for
 defects a fresh reader would trip over. Read-only: you report, the planner
 fixes.
 
-**You are given:** the plan path, `<common>`, the repo path and `BASE_SHA`.
+**You are given:** the plan path, the Challenges doc path (if any), `<common>`,
+the repo path and `BASE_SHA`.
 
 Read `<common>/orchestration.md` section 4 first.
 
@@ -19,13 +20,18 @@ Read `<common>/orchestration.md` section 4 first.
 3. **Done when.** Every `### §N.` step has a **Done when** list, and every item
    in it cites at least one ID.
 4. **IDs.** `ids.sh cited` versus `ids.sh defined` on the plan: any ID cited
-   but not defined (other than `P` IDs, which live in the proposals doc).
-5. **Proposals.** Every `A`, `CD` and `NB` entry, and every Rejected
+   but not defined (other than `P` IDs, which live in the proposals doc, and
+   `CH` IDs, which live in the Challenges doc).
+5. **Challenges.** If you were given the Challenges doc: every `CH` the plan
+   cites exists there (`ids.sh xref --prefixes CH "<plan>" "<challenges>"`,
+   reading only its `UNDEFINED` rows for `CH` IDs), and every challenge whose
+   Outcome is `Accepted` is cited by at least one plan entry.
+6. **Proposals.** Every `A`, `CD` and `NB` entry, and every Rejected
    Alternatives row, cites a `P`.
-6. **Steps vs Affected Files.** Every file a step's **Files** list names is in
+7. **Steps vs Affected Files.** Every file a step's **Files** list names is in
    the Affected Files table with the same status (new, changed, unchanged), and
    the reverse.
-7. **Scope.** No step does something a Non-Goal (`S`) rules out.
+8. **Scope.** No step does something a Non-Goal (`S`) rules out.
 
 ## Return
 

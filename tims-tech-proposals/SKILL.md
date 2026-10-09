@@ -5,11 +5,12 @@ description: >
   lays out every decision point's options for human review, in one clear,
   consistent structure (the question, a side-by-side comparison, each option
   with the same headings, a recommendation, and the decision). This is a
-  presentation and record skill: the calling skill (tims-adversarial-plan or
-  tims-tech-plan-review) supplies repo-grounded options, and this skill adds,
-  decides or supersedes proposals without inventing options or facts. Can also
-  be run directly to tidy a proposals doc, check it against its comprehensive
-  plan, or backfill proposals from the options a plan already records.
+  presentation and record skill: the calling skill (a planning stage run by
+  tims-adversarial-plan, or tims-tech-plan-review) supplies repo-grounded
+  options, and this skill adds, decides or supersedes proposals without
+  inventing options or facts. Can also be run directly to tidy a proposals
+  doc, check it against its comprehensive plan, or backfill proposals from the
+  options a plan already records.
 metadata:
   version: "1.1"
 ---
