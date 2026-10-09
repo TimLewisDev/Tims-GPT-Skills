@@ -14,7 +14,7 @@ description: >
   commits. Use when the engineer wants to review, question, change, correct or
   re-decide anything in an existing tech plan.
 metadata:
-  version: "2.0"
+  version: "2.1"
 ---
 
 # tims-tech-plan-review
@@ -70,14 +70,24 @@ everywhere it applies, and nothing else.
 
 ### 1. Open (read silently)
 
-Read, without commentary:
+`<skill>` is this skill's folder, `<common>` is `<skill>/../tims-common`. Read
+`<common>/orchestration.md` first; its output budget applies to every turn.
 
-- the comprehensive plan in full, then the Tech Plan, then the Tech Proposals
-  and Future Iterations docs;
-- if a Task Breakdown sits beside the plan (`<Prefix> - Task Breakdown.md`),
-  it and its Task Status doc, read-only.
+The plan set is often thousands of lines, so don't read it all into this
+conversation. Instead, without commentary:
 
-Work out:
+- Spawn one subagent (`model: sonnet`, brief `<skill>/briefs/orient.md`) with
+  the paths you have. It reads the whole set (read-only) and writes
+  `<plan folder>/.tims/<Prefix> - Review/index.md`: the orientation facts below,
+  plus an **ID index** (every ID, its document, line and a one-line excerpt) and
+  each document's heading index. It returns a short digest.
+- Read the Tech Plan in full (it's brief), and the comprehensive plan's header
+  and Change Log. Everything else you read on demand, by section
+  (`md-section.sh get`) or by line range from the index.
+- If `<plan folder>/.tims/<Prefix> - Review/session.md` exists, a previous run
+  of this skill ended without wrapping up: read it (see **Session revision**).
+
+From the digest, work out:
 
 - **sync:** the Tech Plan's `Mirrors revision` against the comprehensive plan's
   `Revision`;
@@ -214,6 +224,15 @@ many changes it makes:
 Every change is still confirmed and written as soon as it's agreed. Nothing
 waits for the end of the session, so nothing is lost if it ends early.
 
+**Surviving a stall.** A stalled or cut-off session would otherwise bump the
+revision again when it's re-run. So at the session's first revision bump, write
+`<plan folder>/.tims/<Prefix> - Review/session.md` with the session's revision,
+the date, and one line per change applied so far (add a line after each
+change). On opening, if that file exists and the plan's `Revision` equals the
+revision it records, ask the engineer once: "Carry on the review session that
+made rev N?" If yes, keep using N; if no, the next change bumps as usual. At
+wrap-up, delete the folder.
+
 ## Amendment procedure
 
 Changes come in conversation. The engineer may quote either document, name an ID
@@ -234,6 +253,12 @@ For each change:
    depends on it: Requirements → Approach → Constraints → Critical Decisions and
    review items → Implementation steps (Work, Done when) → Affected Files →
    Non-Goals → Pressure Points → Open Items → Future Iterations → Proposals.
+   For a change that touches more than a couple of IDs, have a subagent
+   (`model: sonnet`, brief `<skill>/briefs/impact.md`) list the *candidates*:
+   every line in the plan set that cites the changed IDs or depends on what
+   they say, and every breakdown task or unit that does. Then read each
+   candidate yourself and decide whether it's affected; the subagent's list is
+   a search result, not a judgement.
 3. **Cross-check.** Compare the result against the whole plan. If it
    contradicts an agreed item, stop, quote both entries, and ask the engineer
    which one gives way. A plain answer ("drop the old rationale") is applied as
@@ -303,7 +328,12 @@ For each change:
       rev <N+1>` rather than deleting it), or the change alters what an
       existing entry says (update it, with a one-line note).
 9. **Re-verify.** Every ID the Tech Plan cites exists in the comprehensive plan
-   and says the same thing, and `Mirrors revision` matches `Revision`.
+   and says the same thing, and `Mirrors revision` matches `Revision`. Check
+   the IDs mechanically, then read the lines that changed:
+   `bash "<common>/scripts/ids.sh" xref --prefixes R,S,§,A,CD,NB "<tech plan>" "<plan>" "<proposals>"`.
+
+Apply each document's changes as targeted Edits, one document per response;
+never rewrite a document to apply a change.
 
 Then return to the review loop. In a walkthrough, that means the same section.
 
@@ -337,7 +367,8 @@ agreed item, and then say exactly which one.
 
 ## Guardrails
 
-- Read everything before saying anything; orient briefly; then ask.
+- Orient from the whole plan set (through the index) before saying anything;
+  orient briefly; then ask. Read sections on demand, never whole documents.
 - One question at a time, and one change at a time. Confirm every change set
   before writing it.
 - The comprehensive plan first, then the views. Never the other way round.

@@ -11,7 +11,7 @@ description: >
   be run directly to tidy a proposals doc, check it against its comprehensive
   plan, or backfill proposals from the options a plan already records.
 metadata:
-  version: "1.0"
+  version: "1.1"
 ---
 
 # tims-tech-proposals
@@ -78,6 +78,20 @@ Types:
   `Superseded by Pm (<date>)`.
 - After every operation, update **At a glance** and **Last updated**.
 
+**How to write.** Proposals docs grow long (hundreds of lines); never rewrite
+or re-read the whole doc. `<common>` is `${CLAUDE_SKILL_DIR}/../tims-common`.
+
+- **Add:** write the proposal to a part file ending with `<!-- tims:end -->`
+  (beside the doc in `.tims/<Prefix> - Plan/research/P<n>.md`, or a temp file),
+  then `bash "<common>/scripts/assemble.sh" append "<doc>" "<part>"`, then add
+  its **At a glance** row with a small Edit. One proposal per response.
+- **Decide / supersede:** targeted Edits to that proposal's status row,
+  headings and **Decision**, and to its **At a glance** row.
+- **Read** one proposal with
+  `bash "<common>/scripts/md-section.sh" get "<doc>" "## P<n> —"`, the table
+  with `… get "<doc>" "## At a glance"`, and the list of proposals with
+  `… index "<doc>"`.
+
 **Linking a proposal.** Proposal headings are `## Pn — <question>`. Elsewhere,
 link one by that heading: in a vault
 `[[<Prefix> - Tech Proposals#Pn — <question>|Pn]]`; elsewhere, a relative
@@ -116,6 +130,11 @@ in the file name).
 
 ## Standalone use
 
+Work through a long doc one proposal at a time (`md-section.sh index`, then
+`get` each), editing in place; never regenerate the doc. For a check against
+the plan, `ids.sh defined <plan>` lists the IDs that **Decides** lines must
+name.
+
 Given a proposals doc:
 
 - bring every proposal into the template layout without changing its content;
@@ -139,7 +158,8 @@ Given a comprehensive plan with no proposals doc, **backfill**:
    gets no proposal.
 2. Backfilled proposals are usually thin, so use the compact form unless the
    plan records enough for full option subsections. Leave out what the plan
-   doesn't cover; don't mark it `Not assessed`.
+   doesn't cover; don't mark it `Not assessed`. Write the doc's header and **At
+   a glance** first, then append the proposals a few per response.
 3. Confirm the location before writing.
 4. Then link back: add each proposal's `P` link to the plan entries it decides
    (Chosen Approach, Rejected Alternatives, and the `CD` and `NB` tables). This
@@ -150,82 +170,5 @@ Given a comprehensive plan with no proposals doc, **backfill**:
 
 ## Template
 
-````markdown
-<header or tag block matching sibling docs>
-
-# <Feature>: Tech Proposals
-
-The options weighed for each decision in this plan, laid out for review. The
-decisions are recorded in the <Comprehensive Tech Plan link>; the <Tech Plan
-link> summarises them.
-
-- **Last updated:** <YYYY-MM-DD HH:MM>
-- **Statuses:** `Open` waiting for a decision · `Default applied` recommendation
-  used for now, open for review · `Decided` · `Superseded` replaced by a later
-  proposal
-
-## At a glance
-| ID | Question | Type | Status | Recommended | Chosen |
-|---|---|---|---|---|---|
-| P1 | <question> | Approach | Decided | A: <title> | A: <title> |
-
----
-
-## P1 — <the question, phrased as a question>
-
-| | |
-|---|---|
-| **Status** | Open · Default applied · Decided <YYYY-MM-DD> · Superseded by Pn (<YYYY-MM-DD>) |
-| **Type** | Approach · Requirement or scope · Blocking decision · Review item |
-| **Decides** | <IDs in the comprehensive plan, linked> |
-
-### The question
-<2–4 plain sentences: what has to be decided, why now, and what depends on it.>
-
-### Options at a glance
-| | A: <title> (Recommended) | B: <title> | C: <title> |
-|---|---|---|---|
-| **In one line** | | | |
-| **Effort / churn** | Small · Medium · Large | | |
-| **Main benefit** | | | |
-| **Main risk** | | | |
-| **Fits the codebase** | <precedent, or "new pattern"> | | |
-
-### Option A — <title> (Recommended)
-**What it means.** <2–3 sentences.>
-
-**How it would be used.** <1–3 sentences or a short numbered flow.>
-
-**Benefits**
-- <benefit>
-
-**Risks / costs**
-- <risk>
-
-**Repository impact**
-- **Systems and files:** <what changes>
-- **Ownership:** <who owns what afterwards>
-- **Runtime:** <effect on builds and runtime, or "none">
-
-**Example** <only if it makes the option clearer>
-```csharp
-<short snippet>
-```
-
-### Option B — <title>
-<same headings as Option A>
-
-### Recommendation
-<Option A, because … 2–4 sentences. Prefer repository consistency and minimal
-churn.>
-
-### Decision
-<Empty while Open.>
-- **Chosen:** Option <X>: <title>
-- **By / when:** <engineer>, <YYYY-MM-DD>
-- **Why:** <reason>
-- **Not chosen:** <B: one-line reason> · <C: one-line reason>
-
-<For Default applied: "**Applied for now:** Option A (the recommendation). Open
-for review.">
-````
+The template is in `templates/proposals.md`. Read it when creating the doc or
+writing the first proposal of a session.

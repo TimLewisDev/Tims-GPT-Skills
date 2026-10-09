@@ -4,17 +4,19 @@ description: >
   Run an adversarial planning session that pressure-tests a feature and produces
   its Comprehensive Tech Plan, the single authority that tims-task-breakdown
   works from. It interrogates the engineer with hypothetical questions to lock
-  down requirements, weighs candidate approaches against the actual repository,
-  boils down scope (what the feature is and is not), resolves every critical
-  technical decision, reconciles contradictions, and only stops on the
-  engineer's explicit confirmation. Options are written live to a Tech Proposals
-  doc (via tims-tech-proposals) for human review; on sign-off it writes the
-  Comprehensive Tech Plan and Future Iterations, then has tims-tech-plan write a
-  brief Tech Plan for review. Use when the user wants to align on a feature, or
-  hands over a spec, ticket or brief and asks for a tech plan / tech design /
-  implementation plan before any code is written.
+  down requirements, weighs candidate approaches against the actual repository
+  (researched by parallel subagents), boils down scope (what the feature is and
+  is not), resolves every critical technical decision, reconciles
+  contradictions, and only stops on the engineer's explicit confirmation. The
+  Consensus Ledger is kept on disk as a draft plan, so a session can resume.
+  Options are written live to a Tech Proposals doc (via tims-tech-proposals) for
+  human review; on sign-off it completes the Comprehensive Tech Plan and Future
+  Iterations, then has tims-tech-plan write a brief Tech Plan for review. Use
+  when the user wants to align on a feature, or hands over a spec, ticket or
+  brief and asks for a tech plan / tech design / implementation plan before any
+  code is written.
 metadata:
-  version: "2.0"
+  version: "3.0"
 ---
 
 # tims-adversarial-plan
@@ -23,6 +25,7 @@ metadata:
 
 ```
 /tims-adversarial-plan <optional feature description, spec or ticket>
+/tims-adversarial-plan resume <draft comprehensive tech plan>
 ```
 
 Seed input is optional. If none is provided, the first questions establish the
@@ -30,6 +33,26 @@ feature at a high level before probing deeper. If intake documents (a spec,
 design doc, brief) are provided, read every one in full before the first probe.
 If an issue or ticket is referenced, or inferable from the branch, note its key
 for the plan's header.
+
+**Resume** picks up a session from its draft plan (Status `Draft`): see
+**Resuming**.
+
+## How to run this skill
+
+`<skill>` is this skill's folder (`${CLAUDE_SKILL_DIR}`), `<common>` is
+`<skill>/../tims-common`, and `<draft>` is the draft folder
+`<plan folder>/.tims/<Prefix> - Plan/`.
+
+- Read `<common>/orchestration.md` first: the output budget, drafts on disk,
+  stall recovery, subagents and scripts apply throughout.
+- Templates are in `<skill>/templates/`, subagent briefs in `<skill>/briefs/`,
+  and the sign-off procedure in `<skill>/handoff.md`. Read each only when you
+  reach it.
+- **You keep the interview and every decision.** Subagents only research and
+  verify; they never talk to the engineer, never decide, and their findings
+  are facts to weigh, not agreements.
+- If you can't spawn subagents, do each brief yourself at the same point, still
+  one part per response.
 
 ## Where this fits
 
@@ -47,19 +70,14 @@ present or amend what it recorded:
 | Document | Written by | Audience | Purpose |
 |---|---|---|---|
 | **Comprehensive Tech Plan** | this skill; amended only through `tims-tech-plan-review` | `tims-task-breakdown`, and the engineer as reference | The single authority: requirements, approach, scope, non-goals, constraints, decisions, repo facts and the full implementation design. |
-| **Tech Proposals** | `tims-tech-proposals`, called live by this skill | human reviewers | Every decision point's options, laid out for review, with the outcome. |
-| **Future Iterations** | this skill | engineer | Adjacent work that came up and was deliberately left out. |
-| **Tech Plan** | `tims-tech-plan`, called by this skill at hand-off | human reviewers | A brief summary that mirrors the comprehensive plan and adds nothing. |
+| **Tech Proposals** | this skill, following `tims-tech-proposals`' rules | human reviewers | Every decision point's options, laid out for review, with the outcome. |
+| **Future Iterations** | this skill (a subagent at hand-off) | engineer | Adjacent work that came up and was deliberately left out. |
+| **Tech Plan** | `tims-tech-plan` (a subagent at hand-off) | human reviewers | A brief summary that mirrors the comprehensive plan and adds nothing. |
 
 **Location and naming.** All four documents share one folder, chosen with the
 engineer (an Obsidian vault, or a folder in the repo), and one prefix, usually
-the feature name:
-
-- `<Prefix> - Comprehensive Tech Plan.md`
-- `<Prefix> - Tech Plan.md`
-- `<Prefix> - Tech Proposals.md`
-- `<Prefix> - Future Iterations.md`
-
+the feature name: `<Prefix> - Comprehensive Tech Plan.md`, `<Prefix> - Tech
+Plan.md`, `<Prefix> - Tech Proposals.md`, `<Prefix> - Future Iterations.md`.
 Match sibling documents' conventions: header or tag block, and link style
 (Obsidian `[[wiki-links]]` in a vault, relative Markdown links elsewhere).
 
@@ -97,38 +115,23 @@ agreeable:
    (see **Termination gate**).
 2. **Never fabricate consensus.** Do not fill gaps with assumptions. Every
    unknown becomes a question. Only statements the engineer has actually agreed
-   to go into the Consensus Ledger.
+   to go into the Consensus Ledger. A subagent's finding is never agreement.
 
-This skill does **not** write production code. It owns every decision and
-every fact in the plan; `tims-tech-proposals` and `tims-tech-plan` only
-present what this skill established.
+This skill does **not** write production code.
 
 ## Planning philosophy
 
-Optimise for:
-- clarity
-- engineer readability
-- execution readiness
-- minimal ambiguity
-- repository alignment
-- minimal implementation churn
+Optimise for clarity, engineer readability, execution readiness, minimal
+ambiguity, repository alignment and minimal implementation churn. Do **not**
+optimise for speculative architecture, future-proofing unless explicitly
+requested, generic engineering advice, excessive prose, unnecessary abstraction
+or idealised redesigns.
 
-Do **not** optimise for:
-- speculative architecture
-- future-proofing unless explicitly requested
-- generic engineering advice
-- excessive prose
-- unnecessary abstraction
-- idealised redesigns
-
-The plan must:
-- remain tightly scoped to what the engineer agreed;
-- align with existing repository architecture and conventions;
-- prefer the smallest coherent implementation approach;
-- minimise unnecessary system churn;
-- avoid speculative abstractions or extensibility work;
-- avoid introducing new frameworks, dependencies, infrastructure, or
-  architectural patterns unless explicitly required.
+The plan must remain tightly scoped to what the engineer agreed; align with
+existing repository architecture and conventions; prefer the smallest coherent
+implementation approach; minimise system churn; avoid speculative abstractions
+or extensibility work; and avoid introducing new frameworks, dependencies,
+infrastructure or architectural patterns unless explicitly required.
 
 **The existing codebase is the primary architectural constraint and source of
 truth.** When the intake or the engineer's wishes conflict with an established
@@ -137,9 +140,7 @@ Critical Decision.
 
 ## The Consensus Ledger
 
-Maintain a running **Consensus Ledger** throughout the session. Re-display it
-(or the changed sections) as it evolves so the engineer can always see the
-emerging agreement. It has five sections:
+The Ledger is the agreement so far, in five sections:
 
 1. **Requirements** (`R`) — agreed functional/behavioural statements, actors,
    triggers, success criteria.
@@ -152,14 +153,43 @@ emerging agreement. It has five sections:
 5. **Technical Decisions** (`CD`, `NB`) — every Critical Decision and how it
    was resolved, each linked to its proposal.
 
-Only agreed answers are recorded. The Ledger becomes the first half of the
-Comprehensive Tech Plan.
+**It lives on disk, in the draft plan.** From the moment the location is agreed,
+`<Prefix> - Comprehensive Tech Plan.md` exists with Status `Draft` (see
+`<skill>/templates/comprehensive-plan.md`), and the Ledger sections *are* the
+plan's sections. Each agreed item is one small Edit, made as soon as it's
+agreed. Update the Status line's `Phase` and `Next` as you go, so a resumed
+session knows where it was.
+
+**In chat, show only what changed**, in at most five lines, with the path:
+"Ledger: +R7, ~R3 (reworded) · <path>". Show a whole section only when the
+engineer asks, one section per turn. Keep the Ledger in mind for contradiction
+checks; re-read the draft rather than re-displaying it.
+
+**Excluded work.** Each time something is ruled out of scope, add one line to
+`<draft>/research/fi-notes.md` (what, why, the `S`/`NB`/`P` that excluded it).
+Future Iterations is written from it.
 
 ## Procedure — the interrogation loop
 
 Ask **one focused probe at a time**. Keep momentum; do not batch long
 questionnaires. The phases are a default order, not a rigid pipeline — a later
 answer can send you back to an earlier phase (see **Contradiction handling**).
+
+### Phase 0 — Location and base branch
+
+Before anything else, settle three things with the engineer: the documents'
+folder, the prefix, and the base branch the work will start from (a
+Constraint). Then:
+
+- `git fetch` once and pin `BASE_SHA=$(git rev-parse origin/<base>)`. All repo
+  facts in this session are checked at that commit (`git show <sha>:<path>`,
+  `git grep <symbol> <sha> -- <path>`), not in the working tree.
+- Create the draft plan from the template, and `<draft>/research/`.
+- Start a **landscape** subagent in the background (`model: sonnet`, brief
+  `<skill>/briefs/landscape.md`) with the feature summary, intake paths, repo
+  and `BASE_SHA`. It maps the systems the feature touches while you question
+  the engineer, and writes `<draft>/research/landscape.md`. Read its digest
+  when it arrives; it is orientation, not agreement.
 
 ### Phase 1 — Requirements elicitation
 
@@ -179,29 +209,30 @@ move on.
 
 ### Phase 2 — Approach exploration
 
-**First, confirm where the documents go** (folder and prefix, per **Location
-and naming**). The Tech Proposals doc is written from this phase on, so the
-location can't wait until the end.
+Identify at least two candidate approaches. **Research them in parallel:** one
+subagent per candidate (at most 4, `model: sonnet`, brief
+`<skill>/briefs/research-approach.md`), each given the approach in a few
+lines, the agreed requirements' IDs and text, the repo and `BASE_SHA`. Each
+writes `<draft>/research/approach-<x>.md`: precedents at `path:line`, where it
+conflicts with existing patterns, effort signals, and unknowns. They don't rank
+the options; you do.
 
-Then present **at least two** candidate approaches. Ground every tradeoff in
-the **actual repository and its conventions**: search the codebase, cite
-precedents as `path:line`, align to the repo's existing patterns, and avoid
-idealised redesigns or generic engineering advice. Adversarially probe the
-tradeoffs the engineer seems to favour.
+Then weigh the tradeoffs yourself, grounded in those findings, aligned to the
+repo's existing patterns, avoiding idealised redesigns and generic advice.
+Adversarially probe the tradeoffs the engineer seems to favour.
 
 For the approach choice:
 
 1. Write it as a proposal (`P1`, status `Open`, type `Approach`) in the Tech
-   Proposals doc, through `tims-tech-proposals` (see **Proposals**).
+   Proposals doc (see **Proposals**).
 2. Ask with **`AskUserQuestion`**: the approaches as options in the same order
    as the proposal, recommended first and labelled as recommended. Tell the
    engineer the proposal's path so they can read the full breakdown there.
 3. Record the answer: the proposal's Decision, and the chosen approach plus
    rejected alternatives (with rationale and the `P` link) under **Approach**.
 
-An approach usually breaks into several sub-choices (for example, where the
-data is stored and how it's displayed). Give each real choice its own
-proposal.
+An approach usually breaks into several sub-choices. Give each real choice its
+own proposal.
 
 ### Phase 3 — Scope & constraints
 
@@ -218,22 +249,23 @@ constraints. Record under **Scope & Non-Goals** and **Constraints**.
 
 Ground the agreed approach in the codebase before anything is written:
 
-- **Base branch.** Establish the branch the work starts from (a Constraint, if
-  it isn't one already). After a `git fetch`, check facts **on that branch**
-  (`git show origin/<base>:<path>`, `git grep <symbol> origin/<base> -- <path>`),
-  not in the working tree.
-- **Repository alignment pass.** Identify the systems, components, contracts,
-  schemas and services the feature touches. Locate the patterns those areas
-  already use (search the repo; do not rely on memory or training data). Note
-  where the approach aligns with existing architecture and where it conflicts.
-  Record each verified fact with its `path:line` for the plan's **Repo Facts
-  Verified**.
+- **Repository alignment pass.** List the systems, components, contracts,
+  schemas and services the feature touches, and for each, the claims the plan
+  will rely on. **Verify them in parallel:** one subagent per area (at most 4,
+  `model: sonnet`, brief `<skill>/briefs/verify-area.md`), each writing
+  `<draft>/research/facts-<area>.md` in the plan's **Repo Facts Verified**
+  format. Then check their references mechanically:
+  `bash "<common>/scripts/verify-refs.sh" --ref "$BASE_SHA" "<facts file>"`.
+  Accept each fact yourself (read the cited lines where it matters), then insert
+  the accepted facts into the draft:
+  `assemble.sh insert "<draft plan>" "## Resolved Critical Decisions" <facts files>`.
 - **Critical Decisions.** Hunt for them systematically (see **Critical
   Decisions**) and resolve each one through a proposal before writing anything.
-- **Implementation outline.** Sketch the steps in dependency order, the files
-  each one creates or changes, and how each is known to be done. Anything this
-  surfaces that isn't settled is a question or a Critical Decision, never an
-  assumption.
+- **Implementation outline.** Write the steps into the draft's Implementation
+  Plan in dependency order: each step's title, the files it creates or changes,
+  and a one-line Done when. Anything this surfaces that isn't settled is a
+  question or a Critical Decision, never an assumption. The full step text is
+  written at hand-off.
 
 Prioritise questions early — resolving ambiguity up front avoids invalidating
 the plan later.
@@ -298,18 +330,23 @@ speculative redesign, and align with existing architectural patterns.
 
 Every decision point where you lay out two or more real alternatives with
 tradeoffs gets a proposal in the Tech Proposals doc, written **as it arises**,
-so the engineer can read the options in a clear layout before choosing. That
-includes choices in Phases 1 and 3 (type `Requirement or scope`, e.g. manual
-versus automatic refresh), not only the approach and Critical Decisions. A
-plain agreed statement with no alternatives goes straight into the Ledger with
-no proposal.
+so the engineer can read the options before choosing. That includes choices in
+Phases 1 and 3 (type `Requirement or scope`), not only the approach and
+Critical Decisions. A plain agreed statement with no alternatives goes straight
+into the Ledger with no proposal.
 
-- Invoke the **`tims-tech-proposals`** skill (Skill tool) for the first
-  proposal. For later proposals, follow its already-loaded rules; re-invoke it
-  if they've dropped out of context.
-- You supply the content: the question, the options and every fact about them,
-  grounded in the repo. `tims-tech-proposals` only lays it out.
-- When the engineer decides, record the Decision in the proposal straight away.
+- Invoke the **`tims-tech-proposals`** skill (Skill tool) once, for its rules
+  and template. Re-invoke it if they've dropped out of context.
+- **You write each proposal yourself, one per response**: you hold the options
+  and facts. Write it to `<draft>/research/P<n>.md` ending with
+  `<!-- tims:end -->`, then append it with
+  `assemble.sh append "<proposals doc>" "<draft>/research/P<n>.md"`, then make a
+  small Edit to **At a glance**. Use the compact form wherever it fits.
+- You alone assign `P` numbers: the next one not used in the doc or the plan.
+- Never read the whole Proposals doc back: read **At a glance**, or one
+  proposal (`md-section.sh get <proposals> "## P4 —"`).
+- When the engineer decides, record the Decision in the proposal straight away
+  (a targeted Edit).
 - Every Ledger entry decided through a proposal (`R`, `S`, `C`, `A`, `CD`,
   `NB`), and every Rejected Alternatives row, cites the `P` that decided it.
 
@@ -320,9 +357,13 @@ the full Consensus Ledger.
 
 Before ending:
 
-- Make sure no `Blocking decision` proposal is still `Open`.
-- Present the **complete** Ledger, plus the list of proposals with their
-  statuses, for final review, and ask for explicit sign-off.
+- Make sure no `Blocking decision` proposal is still `Open` (check **At a
+  glance**).
+- Present a sign-off summary: the count of entries in each Ledger section with
+  their IDs, every entry added or changed since you last showed it (in full),
+  the proposals with their statuses, and the draft plan's path, where the whole
+  Ledger can be read. Offer to show any section in full, one per turn.
+- Ask for explicit sign-off of the **whole** draft.
 
 Silence, "looks fine", "sure", or your own sense that it looks complete are
 **not** sufficient — require an affirmative confirmation that they are happy
@@ -331,172 +372,38 @@ as another answer and keep looping.
 
 ## Output & handoff
 
-On explicit confirmation:
+On explicit confirmation, follow `<skill>/handoff.md`: write the full
+implementation steps one per response, audit the plan and proposals with
+subagents, mark the plan signed off at `Revision 1`, and have subagents write
+the Tech Plan and Future Iterations in parallel.
 
-1. **Write the Comprehensive Tech Plan** (template below) at `Revision 1`, at
-   the location confirmed in Phase 2. If drafting surfaces a decision that
-   isn't settled, it goes through a proposal and the engineer before the plan
-   is written; never resolve it silently.
-2. **Write Future Iterations** (template below), only if out-of-scope work was
-   identified. Do not blend it into the plan.
-3. **Check the Tech Proposals doc**: every entry decided between options has a
-   proposal and cites it, every status is current, and the At-a-glance table
-   matches.
-4. **Invoke the `tims-tech-plan` skill** with the comprehensive plan's path. It
-   writes the brief Tech Plan for human review.
-5. **Hand off.** Give the engineer the four paths and the next steps:
-   - review the Tech Plan and the Tech Proposals;
-   - amend anything with `/tims-tech-plan-review <tech plan> <comprehensive tech plan>`;
-   - then `/tims-task-breakdown <comprehensive tech plan>`.
+## Resuming
 
-### Plan content rules
+`/tims-adversarial-plan resume <draft plan>`, or "continue" after a stall:
 
-The Implementation Plan should:
+1. Read the draft plan: its Status line (`Phase`, `Next`) and its Ledger
+   sections.
+2. Read the Tech Proposals' **At a glance**, and the first lines of each file
+   in `<draft>/research/`.
+3. If the session was signed off and in hand-off, follow the **Resume** section
+   of `handoff.md`.
+4. Otherwise tell the engineer where things stand in a few lines, and carry on
+   with the `Next` probe.
 
-- be concise and skimmable;
-- contain coherent, engineer-executable steps (call them **steps**, never "work
-  units", which belong to `tims-task-breakdown`);
-- avoid excessive micro-steps, and avoid vague high-level statements;
-- clearly identify affected systems/components, and impacted contracts,
-  schemas, services or infrastructure where relevant;
-- preserve sequencing where sequencing matters, and say which steps can run in
-  parallel;
-- put every detail the implementer needs in the step: signatures, constants,
-  exact strings, snippets, gotchas, precedent `path:line`;
-- keep planning IDs out of snippets' code comments (no `// R14`, `(CD1)`, `L0`):
-  snippets are copied into cards and then into committed code. Cite the IDs in
-  the prose around the snippet instead;
-- give every step a **Done when** list of observable checks.
-
-Do **not** include the following unless the engineer explicitly asked for them:
-
-- test plans
-- QA procedures
-- rollout plans
-- monitoring plans
-- generic documentation tasks
-- project-management process
-- speculative future work
-- unrelated refactors
-- architectural redesign proposals
-
-## Templates
-
-### Comprehensive Tech Plan
-
-```markdown
-<header or tag block matching sibling docs>
-
-# <Feature>: Comprehensive Tech Plan
-
-- **Status:** Signed off <YYYY-MM-DD> · **Revision:** 1 (see Change Log)
-- **Tech Plan (summary for review):** <link> · **Tech Proposals:** <link> · **Future Iterations:** <link>
-- **Ticket:** <issue key; omit this line if there isn't one>
-- **Base branch:** `<base>` · **Verified against:** `<base>` @ `<short sha>` on <YYYY-MM-DD>
-- **ID key:** `R` Requirements · `A` Chosen Approach · `S` Scope / Non-Goals · `C` Constraints · `CD` Resolved Critical Decisions · `NB` Non-Blocking Review Items · `P` Tech Proposals · `§N` Implementation Plan step N
-
-**Context.** <What is being built, for whom, and why now. Links to parent docs.
-What earlier material is, and is not, a source of truth.>
-
----
-
-## Requirements
-### <short group heading>
-- **R1:** <agreed statement>
-
-## Chosen Approach
-- **A1:** <agreed statement> (P1)
-
-**Implied consequences, agreed:** <if any>
-
-## Rejected Alternatives
-| Alternative | Why rejected | Proposal |
-|---|---|---|
-
-## Scope / Non-Goals
-**In scope:** <IDs, with a one-line summary>
-
-**Not in scope:**
-- **S1:** <statement>
-  - Why: <reason>
-
-## Constraints
-### <short group heading>
-- **C1:** <statement>
-
-## Repo Facts Verified
-Checked on `<base>` @ `<short sha>` on <YYYY-MM-DD>. Paths are relative to the repo root.
-- <fact>: `<path>:<lines>`
-
-## Resolved Critical Decisions
-| # | Decision | Outcome | Proposal |
-|---|---|---|---|
-
-## Non-Blocking Review Items
-| # | Item | Applied in plan | Alternative | Proposal |
-|---|---|---|---|---|
-
-## Architectural Pressure Points
-| Area | Pressure | Handling |
-|---|---|---|
-
-## Implementation Plan
-**Prerequisites:** <ticket, branch, setup, or "none">
-
-<Step order, and which steps can run in parallel.>
-
-### §1. <title>
-**Files:**
-- new `<path>`: <purpose>
-- change `<path>`: <what changes>
-
-**Work:** <signatures, constants, snippets, precedent `path:line`>
-
-**Done when:**
-- <observable check> (<IDs it proves>)
-
-## Affected Files
-| File | Status | Assembly / area |
-|---|---|---|
-| `<path>` | new · changed · **unchanged** | |
-
-## Open Items (don't block)
-- <item, or "None">
-
-## Change Log
-| Rev | Date | Change | IDs | Source |
-|---|---|---|---|---|
-| 1 | <YYYY-MM-DD> | Signed off | — | tims-adversarial-plan |
-```
-
-### Future Iterations
-
-```markdown
-<header or tag block matching sibling docs>
-
-# <Feature>: Future Iterations
-
-Work that came up during planning and was deliberately left out. It goes with
-<Comprehensive Tech Plan link>.
-
-## <n>. <title>
-- **Description:**
-- **Rationale:**
-- **Expected benefits:**
-- **Risks/tradeoffs:**
-- **Estimated impact:**
-- **Why excluded:** <the S, NB or P IDs that excluded it>
-```
+A long session's context grows with every turn. Once it is very large, suggest
+continuing in a fresh session with `resume`: everything that matters is on
+disk.
 
 ## Behavioural guardrails
 
 - One probe at a time; avoid interrogation fatigue from overly long batches.
-- Ground approach tradeoffs and repo facts in the actual repo on the base
-  branch, not generic advice or memory.
+- Ground approach tradeoffs and repo facts in the actual repo at `BASE_SHA`,
+  not generic advice or memory.
 - Never fabricate consensus or fill gaps with assumptions — unknowns become
-  questions.
-- Keep the Ledger visible and current so the engineer always sees the emerging
-  agreement.
+  questions. Subagent findings are evidence, never agreement.
+- Keep the Ledger current on disk; show changes in chat, not the whole Ledger.
 - Write proposals as decisions arise, not after the fact.
+- Follow the output budget: one proposal, one plan step, one section per
+  response.
 - You are the one holding the loop open. Do not close it early.
 - Never write production code. Never stage, commit or push.

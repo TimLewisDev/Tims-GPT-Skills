@@ -21,6 +21,7 @@ They are instructions and document templates, not code.
 | [`tims-task-status`](tims-task-status/SKILL.md) | Keeps the progress record that lets any new session pick up where the last one stopped. |
 | [`tims-implementation-agent`](tims-implementation-agent/SKILL.md) | Writes the code for one task (or a small plan), strictly within scope. |
 | [`tims-mr-review`](tims-mr-review/SKILL.md) | Reviews a GitLab merge request and posts only the comments you approve. |
+| [`tims-common`](tims-common/SKILL.md) | Not run directly: the shared rules for long runs and the helper scripts the other skills call. |
 
 ## How they fit together
 
@@ -135,6 +136,33 @@ plan changes show up as drift.
   unit passes validation. If a check fails, a fix task is added to the unit and
   the whole unit is validated again.
 
+### Long runs: small responses, drafts on disk, subagents
+
+A single model response has a time limit (a few minutes, thinking included),
+and one ever-growing conversation gets slow. So the skills follow
+[`tims-common/orchestration.md`](tims-common/orchestration.md):
+
+- **No response writes a whole document.** Large documents are built from part
+  files in a hidden draft folder beside them (`.tims/<Prefix> - <Doc>/`) and
+  stitched together by a script. If a session stalls, re-running the skill (or
+  saying "continue") picks up at the first missing part instead of starting
+  again.
+- **Reading, verifying and mechanical writing run in subagents**, up to four at
+  a time, mostly on Sonnet: repo research while you're being interviewed,
+  checking every reference a plan cites, writing task cards from a skeleton
+  you've approved, audits, and rendering the Tech Plan. Questions, decisions
+  and design writing always stay in the main conversation.
+- **Implementation is one subagent per task**, so the conversation that
+  coordinates a work unit stays small. The coordinator is the only writer of
+  the Task Status.
+- **Scripts do the mechanical checks** (bash and git only):
+  `verify-refs.sh` (every path and `path:line` a doc cites, at a commit),
+  `check-planning-ids.sh`, `assemble.sh`, `md-section.sh`, `ids.sh`,
+  `status-boards.sh` and `status-counts.sh`.
+
+Agents that can't spawn subagents do the same steps themselves, still one part
+per response.
+
 ### Repo rules come from the repo
 
 The skills don't assume a language or engine. How to build or compile-check,
@@ -150,7 +178,11 @@ and records the answer.
 Acts as a *collaborative adversary*: challenges assumptions, probes edge cases
 and pushes for an explicit "is / is not" scope, without blocking progress.
 
-- **Run it:** `/tims-adversarial-plan [description, spec or ticket]`
+- **Run it:** `/tims-adversarial-plan [description, spec or ticket]`; resume a
+  stalled or long session with `/tims-adversarial-plan resume <draft plan>`.
+- **The Ledger is on disk:** the Comprehensive Tech Plan exists from the start
+  with Status `Draft`, and fills in as items are agreed. Chat shows only what
+  changed. Other skills refuse to work from a `Draft` plan.
 - **Reads → writes:** your intake and the repo → Comprehensive Tech Plan
   (revision 1), Tech Proposals, Future Iterations (if needed), Tech Plan.
 - **Calls:** `tims-tech-proposals` as each decision comes up;
@@ -224,12 +256,13 @@ time. It slices the design but never changes it.
   mode), or `/tims-task-breakdown continue <task status doc>` (continue mode;
   `resume` and `status` also work).
 - **Breakdown mode:** verifies every path and symbol the plan cites on its base
-  branch; writes self-contained task cards; places every "Done when" check on
-  exactly one unit; checks coverage; writes the documents only after you
-  approve.
-- **Continue mode:** reconciles the Task Status with the repo; flags plan
-  changes since the breakdown; confirms the next unit with you once; runs its
-  tasks back to back; then validates the unit.
+  branch; drafts a skeleton (units, tasks, files, where each "Done when" check
+  lands) for you to approve; then has subagents write the self-contained task
+  cards, one unit each; audits coverage; assembles the documents.
+- **Continue mode:** reconciles the Task Status with the repo and flags plan
+  changes since the breakdown (both in subagents); confirms the next unit with
+  you once; runs each task in its own implementation subagent, back to back;
+  then validates the unit.
 - **Calls:** `tims-task-status` for every status change;
   `tims-implementation-agent` for each Agent task.
 - **Won't:** redesign the feature, edit the plan (it sends you to
@@ -281,10 +314,13 @@ A line-by-line review meant to stand in for a senior engineer's review.
   uses the MR for the current branch.
 - **Needs:** `glab` (authenticated) or a GitLab MCP server; ideally the repo
   checked out, otherwise it reviews from the diff alone.
-- **Checks:** correctness, security, performance, style (`.editorconfig` is the
-  source of truth), Unity and C# conventions, and test coverage. Each finding
-  has a file, line, severity and suggested fix. Binary and Unity-managed files
-  are skipped.
+- **Checks:** correctness, security, performance, style (the repo's rules and
+  `.editorconfig` are the source of truth), test coverage, and stack-specific
+  checks from `references/` when the repo uses that stack (Unity and C#
+  today). Changed files are reviewed in parallel groups, and every critical or
+  major finding is challenged by a separate subagent before it's shown. Each
+  finding has a file, line, severity and suggested fix. Binary and generated
+  files are skipped.
 - **Key rules:** shows every finding before posting anything; posts only the
   inline comments and summary you approve (partial approvals work); flags only
   issues the MR introduced or made worse.
@@ -292,8 +328,15 @@ A line-by-line review meant to stand in for a senior engineer's review.
 
 ## Requirements
 
-- **Claude Code features:** the skills call each other through the Skill tool
-  and ask questions with `AskUserQuestion`. Other agents may need equivalents.
+- **Claude Code features:** the skills call each other through the Skill tool,
+  ask questions with `AskUserQuestion`, and spawn subagents with the Agent tool
+  (asking for `model: sonnet` for mechanical work). Other agents may need
+  equivalents, or do the subagents' work themselves.
+- **bash and git** for the scripts (Git Bash on Windows). No other runtime.
+- **A Sonnet model your provider serves.** The `sonnet` alias resolves through
+  `ANTHROPIC_DEFAULT_SONNET_MODEL`; on Bedrock or a gateway, set it to a model
+  ID your account accepts if the default doesn't. If a Sonnet subagent fails
+  to start, the skills fall back to the default model.
 - **A git repo with a base branch:** facts are checked on `origin/<base>`
   after a `git fetch`, not in the working tree.
 - **Agent instructions in the repo** (`AGENTS.md`, `CLAUDE.md` or equivalent)
@@ -322,6 +365,21 @@ for d in <clone path>/tims-*/; do ln -s "${d%/}" ~/.claude/skills/; done
 A `git pull` in the clone updates every skill, and edits made through
 `~/.claude/skills` show up as changes in the clone. Restart Claude Code to pick
 up new skills.
+
+`tims-common` must be linked too: the other skills find their scripts at
+`../tims-common/` from their own folder. When a new skill folder appears after
+a pull, link it the same way.
+
+### Measuring a run
+
+[`tools/transcript-metrics.sh`](tools/transcript-metrics.sh) reads Claude Code's
+session transcripts and prints, per session and subagent: model minutes, the
+largest single response, responses over 8k tokens, the largest context,
+responses over 4 minutes, stalls, and subagent calls. Use it to compare runs:
+
+```sh
+bash tools/transcript-metrics.sh --since 2026-10-08 ~/.claude/projects/<project>
+```
 
 ## License
 

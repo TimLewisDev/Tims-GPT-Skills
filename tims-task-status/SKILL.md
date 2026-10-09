@@ -11,7 +11,7 @@ description: >
   tims-task-breakdown and tims-implementation-agent whenever they change the
   status; run directly to get a resume summary and a reconcile. Never commits.
 metadata:
-  version: "1.0"
+  version: "2.0"
 ---
 
 # tims-task-status
@@ -31,8 +31,8 @@ skill needs:
 
 | Caller | Uses |
 |---|---|
-| `tims-task-breakdown` | `init` (breakdown mode); `summary` and `reconcile` (continue mode); `set` at every task and unit state change; `record` for decisions, breakdown changes and work-unit validation runs |
-| `tims-implementation-agent` | `log` for its task's Step Log entry; `set` to `Blocked` on a Critical Decision; `record` for risks and Identified Improvements; `init` (standalone mode only) |
+| `tims-task-breakdown` | `init` (breakdown mode, through `briefs/init.md`); `summary` and `reconcile` (continue mode, the read-only part through `briefs/reconcile.md`); `set` at every task and unit state change; `log` from each implementation subagent's RESULT; `record` for decisions, risks, improvements, breakdown changes and work-unit validation runs |
+| `tims-implementation-agent` | Standalone only: `init`, `set`, `log` and `record` for its own steps. In delegated mode it never calls this skill. |
 
 A caller that has already loaded this skill follows its rules for later
 updates; it re-invokes it if they've dropped out of context.
@@ -60,6 +60,33 @@ You keep one document true. A fresh session reads it first and trusts it, so:
   never guessed.
 - Never stage, commit, push or create branches. Whether work is committed is the
   engineer's business.
+
+### How to write
+
+The document grows long; rewriting it whole is slow and can be cut off
+mid-response. So:
+
+- **`init` is the only operation that writes the whole document.** Every other
+  operation makes targeted Edits: the board row, the Step Log entry, the
+  section entry, and the header lines and Resume Here.
+- **Recorded fact first, derived fields second.** Edit the board row, entry or
+  result first, then the header, progress counts and Resume Here. If a session
+  ends between the two, only derived fields are stale, and `reconcile` repairs
+  those without asking.
+- **Read only what you need:** `md-section.sh get <doc> "# Status" "# Resume Here"
+  "# Work Unit Board" "# Task Board"` (in `../tims-common/scripts/`) for the
+  header and boards; the one Step Log entry you are changing.
+- **One writer.** When `tims-task-breakdown` runs implementation subagents, it
+  is the only writer of this document; subagents return their Step Log content
+  instead of writing it.
+- **Compute the derived fields; don't work them out by hand.** After editing a
+  board row, run `bash "../tims-common/scripts/status-counts.sh" "<doc>"`
+  (relative to this skill's folder) and copy its State, Progress, Current Unit,
+  Current Task and Next into the header. Any line starting with `!` is a board
+  inconsistency: fix the derived ones; report the rest.
+- **Boards at `init` come from the breakdown:**
+  `bash "../tims-common/scripts/status-boards.sh" "<breakdown>"` prints both
+  boards with every row `Todo`.
 
 ## Status values
 
@@ -190,7 +217,7 @@ Plan drift is not this skill's job; `tims-task-breakdown` checks it.
 
 ### `summary`
 
-A short resume summary:
+A short resume summary, from the header, Resume Here and the boards only:
 
 - progress (`n of m` units Done, `n of m` tasks Implemented or Done) and the
   current unit;
@@ -199,79 +226,11 @@ A short resume summary:
   engineer;
 - the next action, from Resume Here.
 
-## Templates
+## Templates and briefs
 
-### Task Status (from a Task Breakdown)
-
-```markdown
-<header or tag block matching sibling docs>
-
-# Status
-- State: Not Started | In Progress | Blocked | Ready to Validate | Complete
-- Progress: <n> of <m> units Done · <n> of <m> tasks Implemented or Done
-- Current Unit: <WU ID — name, or None>
-- Current Task: <ID — title, or None>
-- Next: <next task, or "Validate WU<n>", or next unit>
-- Last Updated: <YYYY-MM-DD HH:MM>
-- Branch: `<working branch>` (base `<base>`)
-- Blocking Decisions: <list, or None>
-- Outstanding Risks: <list, or None>
-
-# Resume Here
-1. Read this document, then <unit ID> and its cards in <Task Breakdown link>.
-2. Reconcile: expect branch `<branch>`; <files expected on disk, or none>.
-3. Waiting on the engineer: <checks or decisions, or nothing>.
-4. Next action: <one concrete action, e.g. "Start T08 — Load saved settings (Agent)" or "Validate WU3 (Agent + Engineer)">.
-
-**Documents:** Comprehensive tech plan <link> · Task Breakdown <link> · Repo `<path>`
-
-# Work Unit Board
-| ID | Outcome | Tasks | Validated by | Status | Notes |
-|---|---|---|---|---|---|
-
-# Task Board
-| ID | Task | Executor | Work unit | Depends on | Status | Notes |
-|---|---|---|---|---|---|---|
-
-# Work Unit Validation
-
-## <WU ID> — <name>
-
-### Attempt <n>
-- Run: <YYYY-MM-DD HH:MM> (<why: first run, after fix T<nn>, evidence stale after <commit or change>>)
-- Results: <each check: passed / failed / pending, with evidence>
-- Outcome: Done | Failed → <fix task ID> | Pending engineer (checks <n>, …)
-
-# Decisions Taken
-| # | Decision | Resolution | Tasks / Units | Date |
-|---|---|---|---|---|
-
-# Breakdown Changes
-| Date | Tasks / Units | Change | Why | Approved by |
-|---|---|---|---|---|
-
-# Step Log
-
-## <ID> — <title>
-- Status:
-- Files Modified:
-- Summary:
-- Validation: Deferred to <WU ID>
-- To validate:
-- Follow-up Concerns:
-
-# Identified Improvements
-
-## Improvement <n>
-- Description:
-- Benefits:
-- Risks/Tradeoffs:
-- Why High Impact:
-```
-
-### Task Status (standalone)
-
-The same template without **Current Unit**, the **Work Unit Board**, **Work
-Unit Validation** and **Breakdown Changes**. Progress reads `<n> of <m> tasks
-Done`. The Documents line links the plan, and the Task Board drops its Work unit
-column.
+- `templates/task-status.md`: the full and standalone templates. Read it only
+  for `init`.
+- `briefs/init.md`: `init` from a Task Breakdown, run by a subagent so the
+  caller never generates the whole document itself.
+- `briefs/reconcile.md`: the read-only part of `reconcile`, run by a subagent;
+  it returns discrepancies and proposed corrections for the caller to present.

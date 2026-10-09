@@ -10,7 +10,7 @@ description: >
   regenerate a Tech Plan. To plan a feature from a spec or ticket, use
   tims-adversarial-plan instead.
 metadata:
-  version: "2.0"
+  version: "2.1"
 ---
 
 # tims-tech-plan
@@ -70,8 +70,17 @@ is a view of it for human review.
 
 ## Procedure
 
-1. Read the comprehensive plan in full, and note its `Revision`.
-2. Read the Tech Proposals doc it links, for proposal IDs and statuses only.
+`<common>` is `${CLAUDE_SKILL_DIR}/../tims-common`; scripts are in
+`<common>/scripts/`. Follow the output budget in `<common>/orchestration.md`:
+write the Tech Plan in at most two responses (header to Key decisions, then the
+rest), and in Update mode edit only the affected lines.
+
+1. Read the comprehensive plan in full, and note its `Revision`. **Stop** if its
+   Status is `Draft`: it isn't signed off, and there is nothing to mirror yet.
+2. Read the Tech Proposals doc it links, for proposal IDs and statuses only:
+   its **At a glance** table (`md-section.sh get <proposals> "## At a glance"`)
+   and, when you need a proposal's **Decides** line, that one proposal
+   (`md-section.sh get <proposals> "## P4 —"`). Never read the whole doc.
    - A decision's `P` link comes from the plan entry. If the plan doesn't link
      one, use the proposal whose **Decides** names that entry. If neither
      exists, write `—`. Use the link format in `tims-tech-proposals`
@@ -86,9 +95,13 @@ is a view of it for human review.
      missing doc beyond that.
 3. Write the Tech Plan per the template. Match the comprehensive plan's header
    or tag block and link style.
-4. Check before saving:
+4. Check before finishing:
    - every cited ID exists in the comprehensive plan, and every cited `P`
-     exists in the Tech Proposals doc;
+     exists in the Tech Proposals doc, and every `R`, `S`, `§`, `A`, `CD` and
+     `NB` is cited:
+     `bash "<common>/scripts/ids.sh" xref --prefixes R,S,§,A,CD,NB "<tech plan>" "<comprehensive plan>" "<proposals>"`
+     (an `UNCITED` `NB` is fine only while it's listed under **Open for review**
+     by its `P`);
    - every `R`, `S` and `§` step is covered by at least one line, every `A` and
      `CD` appears under **Key decisions**, and every `NB` appears exactly once:
      under **Open for review** while it's open, otherwise under **Key
@@ -99,60 +112,5 @@ is a view of it for human review.
 
 ## Template
 
-```markdown
-<header or tag block matching the comprehensive plan>
-
-# <Feature>: Tech Plan
-
-> A short summary of the <Comprehensive Tech Plan link> for review. The
-> comprehensive plan is the authority. To change anything, use
-> `/tims-tech-plan-review`.
-
-- **Mirrors revision:** <N> of the comprehensive plan · synced <YYYY-MM-DD, the day this doc was last written or updated>
-- **Tech Proposals:** <link> · **Future Iterations:** <link>
-- **Ticket:** <issue key, if the comprehensive plan has one> · **Base branch:** `<base>`
-
-## In one paragraph
-<3–5 sentences: what is being built, for whom, what it lets them do, and the
-overall approach.> (<IDs>)
-
-## Scope
-**In**
-- <grouped capability> (<R IDs>)
-
-**Out**
-- <non-goal> (<S IDs>)
-
-## Key decisions
-| ID | Decision | Why | Options |
-|---|---|---|---|
-| A1 | <one line> | <one line> | P1 |
-| CD1 | <one line> | <one line> | P4 |
-
-## How it will be built
-**Before step 1:** <prerequisites, or "nothing">
-
-| Step | What | Done when |
-|---|---|---|
-| §1 | <one line> | <short> |
-
-<One line on order, and which steps can run in parallel.>
-
-## Footprint
-- **New:** <one line> (Affected Files)
-- **Changed:** <one line, or "no existing file"> (Affected Files)
-- **Ships to players:** <yes / no, and why> (<C IDs>)
-
-## Risks to watch
-- <one line> (Pressure Points: <area>)
-
-## Open for review
-| Proposal | Question | Status | Applied for now |
-|---|---|---|---|
-| P6 | <question> | Default applied | <option> |
-
-<Or "Nothing open.">
-```
-
-Keep **Risks to watch** to 3–5 lines, picking the pressure points a reviewer
-most needs to know about. **Open for review** follows step 2 of the Procedure.
+The template is in `templates/tech-plan.md`. Read it when writing or
+regenerating; in Update mode, follow the existing document's layout.
