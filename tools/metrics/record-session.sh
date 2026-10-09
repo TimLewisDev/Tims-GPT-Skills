@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # record-session.sh: Claude Code SessionEnd hook. Records the ending session's
-# token use in the token log when it used a tims-* skill. On by default; never
-# fails or delays the session. Needs bash, sed and awk only.
+# token use in the token log when it used a tims-* skill and logging has been
+# switched on (/tims-metrics on). Never fails or delays the session. Needs
+# bash, sed and awk only.
 
 case "${1:-}" in
 	-h | --help)
@@ -15,9 +16,12 @@ Install as a SessionEnd hook in ~/.claude/settings.json:
 Reads transcript_path from the hook input, then runs
 transcript-metrics.sh --record in the background and returns at once.
 
+Records only while the flag file exists: switch it with /tims-metrics on|off.
+
 Environment:
-  TIMS_METRICS        off | 0 | false | no: record nothing (default: on)
-  TIMS_METRICS_LOG    the log to write (default: token-log.md beside this script)
+  TIMS_METRICS        off | 0 | false | no: record nothing, flag or not
+  TIMS_METRICS_HOME   state directory (default: ~/.claude/tims-metrics)
+  TIMS_METRICS_LOG    the log to write (default: token-log.md in the state directory)
   TIMS_METRICS_LABEL  label for the row (default: none)
   TIMS_METRICS_MATCH  ERE the session's skills must match (default: (^|,)tims-)
 
@@ -29,7 +33,9 @@ esac
 case "${TIMS_METRICS:-on}" in off | OFF | 0 | false | no) exit 0 ;; esac
 
 here=$(cd "$(dirname "$0")" && pwd) || exit 0
-log=${TIMS_METRICS_LOG:-$here/token-log.md}
+home=${TIMS_METRICS_HOME:-${CLAUDE_CONFIG_DIR:-$HOME/.claude}/tims-metrics}
+[ -f "$home/enabled" ] || exit 0
+log=${TIMS_METRICS_LOG:-$home/token-log.md}
 match=${TIMS_METRICS_MATCH:-(^|,)tims-}
 
 # The hook input is one JSON object; JSON escapes Windows backslashes as \\.

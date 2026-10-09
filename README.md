@@ -547,22 +547,27 @@ bash tools/transcript-metrics.sh --record tools/metrics/token-log.md --all \
   --since 2026-10-06 --match '(^|,)tims-' --label "baseline" ~/.claude/projects/<project>
 ```
 
-To record every session that uses a `tims-*` skill automatically, add
-[`tools/metrics/record-session.sh`](tools/metrics/record-session.sh) as a
-`SessionEnd` hook in `~/.claude/settings.json`:
+To record every session that uses a `tims-*` skill automatically, turn on
+logging with the [`tims-metrics`](tims-metrics/SKILL.md) skill (link it into
+`~/.claude/skills` like the others):
 
-```json
-"hooks": {
-  "SessionEnd": [ { "hooks": [ { "type": "command",
-    "command": "bash \"<clone>/tools/metrics/record-session.sh\"" } ] } ]
-}
+```
+/tims-metrics on        # once per machine; persists across sessions
+/tims-metrics status
+/tims-metrics report --last 10
+/tims-metrics off
 ```
 
-It writes `tools/metrics/token-log.md` (ignored by git). It's on once
-installed; set `TIMS_METRICS=off` (in the shell, or in the settings' `env`) to
-turn it off, `TIMS_METRICS_LABEL` to label the rows, and `TIMS_METRICS_LOG` to
-write elsewhere. A session that ends with Claude Code being killed isn't
-recorded; `--record --all` picks it up later.
+`on` creates a flag file at `~/.claude/tims-metrics/enabled` and, if it is
+missing, adds the
+[`tools/metrics/record-session.sh`](tools/metrics/record-session.sh)
+`SessionEnd` hook to `~/.claude/settings.json` (it shows you the entry first;
+it applies from the next session). `off` removes the flag and leaves the hook,
+which then does nothing. Rows go to `~/.claude/tims-metrics/token-log.md`.
+`TIMS_METRICS=off` overrides the flag, `TIMS_METRICS_LABEL` labels the rows,
+`TIMS_METRICS_HOME` moves the state directory and `TIMS_METRICS_LOG` the log. A
+session that ends with Claude Code being killed isn't recorded;
+`--record --all` picks it up later.
 
 ## License
 
