@@ -2,46 +2,73 @@
 
 The Task Status document is the resume point. Assume the session starting now
 knows nothing else. `<skill>` is this skill's folder, `<common>` is
-`<skill>/../tims-common`, and `<run>` is
-`<doc folder>/.tims/<Prefix> - Task Status/` (validation logs).
+`<skill>/../tims-common`, `<scripts>` is `<common>/scripts`, and `<run>` is
+`<doc folder>/.tims/<Prefix> - Task Status/` (result files and validation
+logs).
 
 The main agent is the orchestrator and the **only writer of the Task Status**.
 It keeps its context small: it never loads cards it isn't about to hand over,
-never implements a task itself, and never reads whole documents when a section
-will do.
+never implements a task itself, never reads whole documents when a section
+will do, and **never re-types into the Task Status what a script can write**.
+Every routine update is one script call:
+
+| Update | Script |
+|---|---|
+| A task's or unit's status (with the unit and header following) | `status-set.sh <status> <ID> "<Status>" [--note <text>]` |
+| A task's Step Log entry, risks and improvements, from its result file | `status-log.sh <status> <run>/results/<ID>.md` |
+| A decision, breakdown change, risk, improvement, validation attempt or one check's result | `status-record.sh <status> <kind> …` |
+
+Each prints one line per change, never the document. Run any of them with `-h`
+for its options. If one exits `2` (it can't parse the document), make that
+update by hand under `tims-task-status`'s rules and tell the engineer which
+script failed.
 
 ## 1. Load
 
-- Invoke `tims-task-status` once (its rules stay loaded for later updates).
 - Read the status doc's `# Status` header, `# Resume Here` and the two boards
   (`md-section.sh get <status> "# Status" "# Resume Here" "# Work Unit Board" "# Task Board"`).
 - Read the breakdown's header, Work Units and Task Map, and the current unit's
-  block (`md-section.sh get <breakdown> "## WU3 —"` gives the unit heading and
-  everything under it, including its cards; use `"## WU3 —"` alone only when
-  you need the cards, otherwise stop at the unit's Validation). Read the plan
-  sections those cards cite only when a step needs them.
+  block up to its first card (`md-section.sh get <breakdown> "## WU3 —"`, read
+  to the end of How to validate). Read the plan sections the cards cite only
+  when a step needs them.
 - `git fetch` once and pin `BASE_SHA`.
+- Invoke `tims-task-status` only when you need an operation no script covers
+  (a reconcile correction that needs judgement, a hand-made update after a
+  script failed).
 
-## 2. Reconcile and check for plan drift (subagents, in parallel)
+## 2. Pre-flight: reconcile and plan drift
 
-- **Reconcile:** a subagent (`model: sonnet`) following
-  `<skill>/../tims-task-status/briefs/reconcile.md`, given the status and
-  breakdown paths and the repo. Read-only. It returns discrepancies with a
-  proposed correction for each.
-- **Plan drift:** a subagent (`model: sonnet`) following
-  `<skill>/briefs/plan-drift.md`, given the plan, the breakdown's "Plan read"
-  revision, the current unit and the later units' IDs. Read-only. It returns the
-  plan's Change Log rows since that revision, mapped to the cards and checks
-  they affect.
+```
+bash "<scripts>/continue-preflight.sh" "<status>" "<breakdown>"
+```
 
-Present the discrepancies and drift together. Apply reconcile corrections
-through `tims-task-status` only after the engineer confirms. A plan change that
-affects a card or a unit's checks goes through the amendment rules in
-`SKILL.md`.
+It checks, without a model: the boards against the breakdown, the branch,
+files on disk for Implemented, Done and Todo tasks, git changes to In Progress
+tasks' files, validation evidence made stale by later commits, the header's
+derived fields, and the plan's revision against "Plan read". Read its TSV and
+its two summary lines.
+
+- `derived` rows: fix with `status-set.sh <status> --refresh`, no confirmation
+  needed.
+- `fact` rows: present each with its proposed correction; apply it only after
+  the engineer confirms (through the scripts, and log it with
+  `status-record.sh <status> change …`).
+- `judge` rows (an In Progress task): read `git diff` on that task's card files
+  against its Steps and say how far it got.
+- `plan: … (drift)`: only now spawn the plan-drift subagent (`model: sonnet`,
+  `<skill>/briefs/plan-drift.md`), given the plan, the "Plan read" revision,
+  the current unit and the later units' IDs. A plan change that affects a card
+  or a unit's checks goes through the amendment rules in `SKILL.md`.
+- `needs_model: no` and no rows: nothing to reconcile; say so in one line.
+
+If the script exits `2`, fall back to the reconcile subagent (`model: sonnet`,
+`<skill>/../tims-task-status/briefs/reconcile.md`) and, if the plan's revision
+can't be read, the plan-drift one.
 
 ## 3. Report
 
-Give the engineer the `tims-task-status summary`, plus:
+Give the engineer the `tims-task-status summary` (from the header, Resume Here
+and the boards already read), plus:
 
 - for a unit that is `Ready to Validate`: go straight to step 6 and give the
   inline validation checklist;
@@ -64,73 +91,92 @@ Give the engineer the `tims-task-status summary`, plus:
    `md-section.sh get <breakdown> "### T07 —" | verify-refs.sh --worktree --only-problems -`.
    If something moved, correct the card and log it. If it changed materially,
    escalate.
-2. **Start.** Mark the task `In Progress` (and the unit, if it wasn't) with
-   `tims-task-status set`. This is saved **before** the subagent starts.
+2. **Start.** `status-set.sh <status> T07 "In Progress"` (the unit follows).
+   This is saved **before** the subagent starts.
 3. **Execute.**
    - **Agent task:** spawn one implementation subagent on the default model
      (general-purpose, foreground), with the handoff in
      `<skill>/templates/handoff.md` filled in. Don't paste the card: the
-     subagent reads it from the breakdown.
-   - **Engineer task:** show the card's Steps as a checklist, wait, and record
-     what the engineer reports.
-4. **Escalation.** If the RESULT contains a Critical Decision: mark the task
-   `Blocked` (`set`, naming the decision), present the decision to the
-   engineer, and record their choice (`record` a decision). Then continue the
-   same subagent with SendMessage, giving the decision. If it can't be
-   continued, spawn a new one with the handoff, the decision, and "inspect `git
-   diff` on the card's Files to see the work so far".
-5. **Record.** From the RESULT, write the task's Step Log entry (`log`: Files
-   Modified, Summary, Validation `Deferred to <WU>`, To validate, Follow-up
-   Concerns), then `set` the task `Implemented` (or `In Progress` / `Blocked`
-   if it stopped early), and `record` each risk and Identified Improvement it
-   reported. For an Engineer task, write the entry yourself from what they
-   reported.
+     subagent reads it from the breakdown, and writes its result to
+     `<run>/results/T07.md`.
+   - **Engineer task:** show the card's Steps as a checklist, wait, then write
+     what the engineer reports as a result file in the same format
+     (`<skill>/../tims-implementation-agent/templates/result.md`) and apply it
+     as in step 5.
+4. **Record.** `status-log.sh <status> <run>/results/T07.md`. It writes the
+   Step Log entry, adds each risk and improvement, and sets the task
+   `Implemented` (`Blocked` or `In Progress` if it stopped early). Don't read
+   the result file back unless the script reports a critical decision or
+   fails.
+5. **Escalation.** If `status-log.sh` reports `critical decision: yes`: read
+   only that section of the result file, check its evidence, and present it
+   with `<skill>/templates/critical-decision.md`. Record the choice with
+   `status-record.sh <status> decision …` (it prints the decision's ID), and
+   name it on the task: `status-set.sh <status> T07 Blocked --note "<D-ID>: <one line>"`
+   while waiting, then `"In Progress" --note ""` once decided. Continue the
+   same subagent with SendMessage, giving the decision; it rewrites its result
+   file when it finishes. If it can't be continued, spawn a new one with the
+   handoff, the decision, and "inspect `git diff` on the card's Files to see
+   the work so far".
 6. **Next.** Continue with the unit's next task, or go to step 6 if this was
    the last.
 
 **Two at once (optional).** Two Agent tasks may run side by side only when all
 of these hold: they're in the same unit, the breakdown marks them as parallel,
 their Files lists don't overlap, and neither depends on the other. Never more
-than two. Set both `In Progress` first; record each as it returns. If either
-escalates, start nothing new until it's resolved. Otherwise, one at a time.
+than two. Set both `In Progress` first; apply each result file as it returns.
+If either escalates, start nothing new until it's resolved. Otherwise, one at a
+time.
 
 ## 6. Validate the work unit
 
 When every task in the unit is `Implemented`:
 
-1. Mark the unit `Ready to Validate` (`set`).
-2. **Agent checks:** a subagent (`model: sonnet`) following
-   `<skill>/briefs/run-agent-checks.md`, given the breakdown path and unit ID,
-   the Build check, `<run>/validation/<WU>-attempt<n>/` for its logs, and the
-   repo. It runs exactly the unit's Agent checks and returns, per check: passed
-   / failed / blocked, the command, and up to 10 lines of evidence. Agent
-   results from an earlier session count only if reconcile found no change to
-   the unit's files since that run; otherwise re-run them as a new attempt.
-3. **Report the agent results** inline: the check, what was run, passed or
-   failed, and the evidence. Record the attempt (`record` a unit validation
-   run).
-4. If the unit needs the engineer, give them the **Engineer** checks **inline,
-   in chat**. Build the checklist from the unit's Validation and How to
-   validate, plus its tasks' **To validate** notes in the Step Log:
+1. `status-set.sh <status> WU3 "Ready to Validate"`.
+2. **Agent checks:**
+   ```
+   bash "<scripts>/run-checks.sh" "<breakdown>" WU3 "<run>/validation/WU3-attempt<n>" --why "<first run | after fix T09 | evidence stale>"
+   ```
+   It runs the commands in the unit's `checks` block, saves each output to
+   `check-<n>.log`, prints one row per check, and writes `attempt.md`: agent
+   checks passed or failed, engineer checks pending. Check by hand any it
+   reports `blocked` (an Agent check with no command), and record the result
+   as in step 5. If it exits `2` (the unit has no `checks` block, as in
+   breakdowns written before it existed), use a subagent (`model: sonnet`,
+   `<skill>/briefs/run-agent-checks.md`) instead, given the breakdown path and
+   unit ID, the Build check, the same log folder and the repo, and write its
+   results as an attempt file in the same format. Agent results from an
+   earlier session count only if the pre-flight reported nothing stale for the
+   unit; otherwise run them again as a new attempt.
+3. **Record and report.** `status-record.sh <status> validation WU3 --file <run>/validation/WU3-attempt<n>/attempt.md`.
+   Report the agent results inline: the check, what was run, passed or failed,
+   and the evidence (the rows `run-checks.sh` printed).
+4. If the unit needs the engineer, draft the checklist with
+   `validation-checklist.sh <breakdown> <status> WU3`. It gathers the open
+   Engineer checks, the unit's engineer steps and its tasks' To validate notes.
+   Turn it into the inline checklist, **in chat**:
    - a numbered list, one check per item;
    - each item: what to open and do (exact steps), what they should see, and
      what to report back;
    - name everything concretely: file and asset paths, menu items, field
-     names, values to set and expect. If the breakdown is vague, look the
-     concrete target up in the repo first (a quick `git grep`);
+     names, values to set and expect. If the draft is vague, look the concrete
+     target up in the repo first (a quick `git grep`);
    - edge cases worth trying, as their own items;
    - end with: "Ask me about any step if you need more detail."
 
    A check marked **Agent + Engineer** passes only when both parts pass.
 5. Wait for the answers, and answer follow-up questions in the same session. A
    question isn't a result: keep the check open until the engineer reports it.
-   Update the attempt as answers arrive.
-6. **All checks pass:** mark the unit `Done`, which marks each of its tasks
-   `Done`.
-7. **Any check fails:** mark the unit `Failed`. Trace the failure to the task
-   that caused it, and propose a fix task (the next unused ID, added to this
-   unit) through the amendment rules. Once it's approved and implemented,
-   re-run the **whole** unit's validation as a new attempt.
+   Record each answer as it arrives:
+   `status-record.sh <status> check WU3 <n> passed|failed|waived --evidence "<what they reported>"`.
+   It recomputes the attempt's Outcome.
+6. **Outcome Done:** `status-set.sh <status> WU3 Done`, which marks each of its
+   tasks `Done`.
+7. **Any check fails:** `status-set.sh <status> WU3 Failed --note "check <n>"`.
+   Trace the failure to the task that caused it, and propose a fix task (the
+   next unused ID, added to this unit) through the amendment rules. Once it's
+   approved and implemented, re-run the **whole** unit's validation as a new
+   attempt.
 8. Stop and report: the unit's check results, what changed, and the next unit.
 
 Never offer to commit. When a unit is `Done`, say so; the engineer decides what

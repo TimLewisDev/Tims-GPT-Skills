@@ -8,7 +8,7 @@ candidates; you don't decide what's affected or propose wording.
 change, the review index (`.tims/<Prefix> - Review/index.md`), the plan-set
 paths, and `<common>`.
 
-Read `<common>/orchestration.md` section 4 first, then the index.
+Read `<common>/subagent-rules.md` first, then the index.
 
 ## Do
 

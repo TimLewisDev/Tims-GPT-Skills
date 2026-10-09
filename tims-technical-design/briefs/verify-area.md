@@ -8,7 +8,7 @@ format. You add no design.
 planner), the repo path, `BASE_SHA`, the output path
 `<draft>/research/facts-<area>.md`, and `<common>`.
 
-Read `<common>/orchestration.md` section 4 first. Use only
+Read `<common>/subagent-rules.md` first. Use only
 `git --no-optional-locks show <sha>:<path>` and
 `git --no-optional-locks grep -n <symbol> <sha> -- <path>`.
 

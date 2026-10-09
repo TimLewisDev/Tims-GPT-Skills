@@ -39,10 +39,11 @@ edits this structure in place.
 
 ## <WU ID> — <name>
 
-## Attempt <n>
+### Attempt <n>
 - Run: <YYYY-MM-DD HH:MM> (<why: first run, after fix T<nn>, evidence stale after <commit or change>>)
-- Results: <each check: passed / failed / pending, with evidence>
-- Outcome: Done | Failed → <fix task ID> | Pending engineer (checks <n>, …)
+- Results:
+  - Check <n> (<check text>) [<Agent | Engineer | Agent + Engineer>]: <passed | failed | pending | blocked | waived>. <evidence>
+- Outcome: Done | Failed | Pending (checks <n>, …)
 
 # Decisions Taken
 | # | Decision | Resolution | Tasks / Units | Date |

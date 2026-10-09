@@ -9,7 +9,7 @@ author's time.
 detail, suggestion), `<work>`, the repo path, and the source and target
 branches.
 
-Read `<skill>/../tims-common/orchestration.md` section 4 (`<skill>` is the
+Read `<skill>/../tims-common/subagent-rules.md` (`<skill>` is the
 folder above this `briefs/` folder), then go straight to the code. Don't read
 the other findings: judge this one on its own.
 

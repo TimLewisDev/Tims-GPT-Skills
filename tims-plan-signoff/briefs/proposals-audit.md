@@ -5,7 +5,7 @@ Read-only. Proposals docs get long: never read one in full.
 
 **You are given:** the plan path, the proposals doc path, and `<common>`.
 
-Read `<common>/orchestration.md` section 4 first.
+Read `<common>/subagent-rules.md` first.
 
 ## Do
 

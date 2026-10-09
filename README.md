@@ -171,7 +171,10 @@ plan changes show up as drift.
 
 A single model response has a time limit (a few minutes, thinking included),
 and one ever-growing conversation gets slow. So the skills follow
-[`tims-common/orchestration.md`](tims-common/orchestration.md):
+[`tims-common/orchestration.md`](tims-common/orchestration.md) (subagents read
+only its short subset,
+[`tims-common/subagent-rules.md`](tims-common/subagent-rules.md), and only the
+sections of a `SKILL.md` their brief needs):
 
 - **No response writes a whole document.** Large documents are built from part
   files in a hidden draft folder beside them (`.tims/<Prefix> - <Doc>/`) and
@@ -196,6 +199,25 @@ and one ever-growing conversation gets slow. So the skills follow
   `verify-refs.sh` (every path and `path:line` a doc cites, at a commit),
   `check-planning-ids.sh`, `assemble.sh`, `md-section.sh`, `ids.sh`,
   `status-boards.sh` and `status-counts.sh`.
+- **Scripts write the Task Status, not the model.** In continue mode every
+  routine update is one call: `status-set.sh` (a status change, with the unit,
+  header and Resume Here following), `status-log.sh` (applies the result file
+  an implementation subagent writes, so its report is never re-typed) and
+  `status-record.sh` (decisions, risks, validation attempts, each check's
+  answer). `continue-preflight.sh` does the reconcile and the plan-drift check
+  without a subagent, `run-checks.sh` runs a unit's `checks` block, and
+  `validation-checklist.sh` drafts the engineer's checklist. Subagents are
+  spawned only when a script reports something that needs judgement, or
+  can't parse an older document.
+- **Scripts write the copied parts of a breakdown.** `donewhen.sh` numbers the
+  plan's "Done when" items one way; `skeleton-check.sh` checks the skeleton
+  against the plan before the engineer sees it; `skeleton-render.sh` writes
+  the manifest, Work Units and Task Map; `card-scaffold.sh` pre-writes each
+  unit block and card (tables, links, verbatim Done-when items, Plan ID
+  excerpts, Files) so card writers fill in only what needs judgement;
+  `coverage.sh` does the mechanical coverage audit; `status-init.sh` creates
+  the Task Status. Verification subagents are batched, up to three plan steps
+  each.
 
 Agents that can't spawn subagents do the same steps themselves, still one part
 per response.
@@ -462,6 +484,17 @@ up new skills.
 `../tims-common/` from their own folder. When a new skill folder appears after
 a pull, link it the same way.
 
+### Testing the scripts
+
+[`tools/test-scripts.sh`](tools/test-scripts.sh) runs the breakdown-mode,
+continue-mode and status scripts against the fixtures in `tools/fixtures/`
+(`demo/`: a plan, a breakdown and a Task Status; `demo-draft/`: a skeleton) in
+a throwaway git repo, including a CRLF copy:
+
+```sh
+bash tools/test-scripts.sh
+```
+
 ### Measuring a run
 
 [`tools/transcript-metrics.sh`](tools/transcript-metrics.sh) reads Claude Code's
@@ -472,6 +505,47 @@ responses over 4 minutes, stalls, and subagent calls. Use it to compare runs:
 ```sh
 bash tools/transcript-metrics.sh --since 2026-10-08 ~/.claude/projects/<project>
 ```
+
+For token use, `--tokens` prints one row per session with its subagents added
+in (cache write, cache read, input, output, a weighted total and the largest
+context), and `--detail <session>` splits one session by thread:
+
+```sh
+bash tools/transcript-metrics.sh --tokens --since 2026-10-08 ~/.claude/projects/<project>
+bash tools/transcript-metrics.sh --detail <session id> ~/.claude/projects/<project>
+```
+
+The weighted total is cache write × 1.25 + cache read × 0.1 + input + output ×
+5: tokens priced relative to plain input on one model, so compare runs on the
+same model.
+
+#### Token log
+
+`--record <log.md>` appends the session to a markdown table (most recent
+session, or every session in range with `--all`), so the numbers outlive
+Claude Code's transcript clean-up. Recording a session again replaces its row.
+
+```sh
+bash tools/transcript-metrics.sh --record tools/metrics/token-log.md --all \
+  --since 2026-10-06 --match '(^|,)tims-' --label "baseline" ~/.claude/projects/<project>
+```
+
+To record every session that uses a `tims-*` skill automatically, add
+[`tools/metrics/record-session.sh`](tools/metrics/record-session.sh) as a
+`SessionEnd` hook in `~/.claude/settings.json`:
+
+```json
+"hooks": {
+  "SessionEnd": [ { "hooks": [ { "type": "command",
+    "command": "bash \"<clone>/tools/metrics/record-session.sh\"" } ] } ]
+}
+```
+
+It writes `tools/metrics/token-log.md` (ignored by git). It's on once
+installed; set `TIMS_METRICS=off` (in the shell, or in the settings' `env`) to
+turn it off, `TIMS_METRICS_LABEL` to label the rows, and `TIMS_METRICS_LOG` to
+write elsewhere. A session that ends with Claude Code being killed isn't
+recorded; `--record --all` picks it up later.
 
 ## License
 

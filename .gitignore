@@ -10,3 +10,6 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# Personal token log written by tools/metrics/record-session.sh
+tools/metrics/token-log.md

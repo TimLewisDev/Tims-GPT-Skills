@@ -15,7 +15,7 @@ research files the lens names; the repo path; `BASE_SHA`; the **first `CH`
 number** to use; the output path `<draft>/challenges/<stage>.md`; and
 `<common>`.
 
-Read `<common>/orchestration.md` section 4 first, then the lens, then the
+Read `<common>/subagent-rules.md` first, then the lens, then the
 target. Read only the sections you need (`md-section.sh get`), and code at
 `BASE_SHA` only (`git --no-optional-locks show <sha>:<path>`,
 `git --no-optional-locks grep -n <term> <sha> -- <path>`). If the Challenges

@@ -3,12 +3,17 @@
 You create the Task Status document for a new breakdown. Every row comes from
 the breakdown's tables; you invent nothing.
 
+`status-init.sh` does this without a model and is used first. You are the
+fallback, for a breakdown it can't read (it exited `2`).
+
 **You are given:** the Task Breakdown path, the Task Status path to create, and
 `<scripts>` (the `tims-common/scripts` folder).
 
-Read `<scripts>/../orchestration.md` section 4, then `<skill>/SKILL.md`
-(`<skill>` is the folder above this `briefs/` folder): its Role, Status values
-and the `init` operation. Then `<skill>/templates/task-status.md`.
+Read `<scripts>/../subagent-rules.md`, then only the Role, Status values and
+`init` sections of `<skill>/SKILL.md` (`<skill>` is the folder above this
+`briefs/` folder):
+`` bash "<scripts>/md-section.sh" get "<skill>/SKILL.md" "## Role" "## Status values" "### \`init\`" ``.
+Then `<skill>/templates/task-status.md`.
 
 ## Do
 

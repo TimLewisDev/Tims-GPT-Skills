@@ -8,7 +8,7 @@ subagent extracts it.
 Implement exactly one task: <ID> — <title>. Do not start any other task.
 
 Invoke the tims-implementation-agent skill and follow it in DELEGATED MODE.
-Read <common>/orchestration.md first (section 4 applies to you).
+Read <common>/subagent-rules.md first; it applies to you.
 
 Your card: run
   bash "<common>/scripts/md-section.sh" get "<breakdown path>" "### <ID> —"
@@ -26,22 +26,23 @@ unit, not on its own:
   from the card, and run
     bash "<common>/scripts/check-planning-ids.sh" <your changed files>
   before you finish.
-- Do not write to the Task Status (<status path>). Return everything for it in
-  your RESULT; the orchestrator records it.
+- Do not write to the Task Status (<status path>).
 
 Repo: <repo path> · base <base> @ <BASE_SHA> · Build check: <method, for reference only>
 
 Escalate any conflict between the card, the plan and the codebase, and every
-Critical Decision, in your RESULT, and stop; never resolve one yourself. Stop
-once this task's Steps are done.
+Critical Decision, and stop; never resolve one yourself. Stop once this task's
+Steps are done.
 
-End with the RESULT block from orchestration.md, plus these fields:
+When you stop, for any reason, write your result in one Write to
+  <run>/results/<ID>.md
+in exactly the format of <common>/../tims-implementation-agent/templates/result.md
+(Validation: Deferred to <WU ID>). The orchestrator applies that file with a
+script, so keep its headings and bullet lines. If you are continued later,
+rewrite the whole file.
+
+Then end with the RESULT block from subagent-rules.md, kept short:
+  status, wrote (the result file and nothing else), a 1–3 line summary,
   task_status: implemented | blocked | interrupted
-  files_modified: <one path per line>
-  summary: <a few lines>
-  to_validate: <what to check, how (commands or exact engineer steps), the expected result, edge cases>
-  follow_up: <anything the next task or the engineer should know, or none>
-  risks: <none, or one per line>
-  improvements: <none, or per item: description | benefits | risks | why high impact>
-  critical_decision: <none, or the Critical Decision block from tims-implementation-agent>
+  critical_decision: none | yes (in the result file)
 ```

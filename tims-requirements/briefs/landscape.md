@@ -8,7 +8,7 @@ nothing; nothing you write is agreed.
 paths, the repo path, `BASE_SHA`, the output path
 `<draft>/research/landscape.md`, and `<common>` (the `tims-common` folder).
 
-Read `<common>/orchestration.md` section 4 first. Read the intake documents and
+Read `<common>/subagent-rules.md` first. Read the intake documents and
 the repo's agent instructions (`AGENTS.md`, `CLAUDE.md` or equivalent). Read
 code at `BASE_SHA` only (`git --no-optional-locks grep -n <term> <sha> -- <path>`,
 `git --no-optional-locks show <sha>:<path>`).

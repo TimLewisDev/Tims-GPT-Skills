@@ -72,29 +72,12 @@ writing in the main agent: only it holds what was agreed.
 Never paste a brief, a whole plan or a whole card into the prompt; the
 subagent reads them from disk.
 
-**Every subagent:**
-
-- never talks to the engineer; questions and decisions come back as
-  escalations;
-- never decides a Critical Decision, and never adds content the documents and
-  the repo don't support;
-- never runs a git command that changes anything (no fetch, add, commit,
-  checkout, stash, branch or worktree); reads with `git --no-optional-locks`,
-  at `<BASE_SHA>:<path>`, not at `origin/<base>`, which may move mid-run;
-- never writes planning IDs into code;
-- follows the output budget itself: one part per Write;
-- ends with a RESULT block of 60 lines or fewer, with details in files.
-
-```
-RESULT
-status: done | partial | blocked | failed
-wrote: <absolute path per line, or none>
-summary: <up to 5 lines>
-escalations: <none, or one per line:>
-- E1 | blocking | review | question | <where: task, step or ref> | <issue> | <evidence path:line @sha> | <options seen>
-findings: <none, a TSV of up to 40 rows, or "see <file>">
-END RESULT
-```
+**What every subagent must do** is in
+[`subagent-rules.md`](subagent-rules.md): never talk to the engineer, never
+decide a Critical Decision, no git writes, no planning IDs in code, one part
+per Write, details in files, and the RESULT block. Briefs point subagents at
+that file, not at this one, so they read only the rules that apply to them.
+When you read a RESULT, expect that block.
 
 **Concurrency.**
 

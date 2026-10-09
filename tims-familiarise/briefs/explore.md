@@ -10,7 +10,7 @@ an area (for `map`) or a topic and a question (for `trace`), the repo path,
 `BASE_SHA` (or "working tree"), the output path in `<fam>/research/`, and
 `<common>` (the `tims-common` folder).
 
-Read `<common>/orchestration.md` section 4 first, and the repo's agent
+Read `<common>/subagent-rules.md` first, and the repo's agent
 instructions (`AGENTS.md`, `CLAUDE.md` or equivalent). Read code at `BASE_SHA`
 only (`git --no-optional-locks grep -n <term> <sha> -- <path>`,
 `git --no-optional-locks show <sha>:<path>`), unless told "working tree".

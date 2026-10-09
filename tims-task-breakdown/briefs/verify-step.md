@@ -6,7 +6,7 @@ is still true at a pinned commit. You do not plan, slice or fix anything.
 **You are given:** `<common>/scripts`, the draft folder `<draft>`, the plan path
 and the step's line range (`§N`, lines a–b), the repo path and `BASE_SHA`.
 
-Read `<common>/orchestration.md` section 4 first; it applies to you.
+Read `<common>/subagent-rules.md` first; it applies to you.
 
 ## Do
 

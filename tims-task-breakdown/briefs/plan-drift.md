@@ -4,10 +4,13 @@ You report how a Comprehensive Tech Plan changed after its Task Breakdown was
 written, and which cards and unit checks each change touches. Read-only. You
 propose nothing.
 
+The orchestrator spawns you only when `continue-preflight.sh` reports drift
+(the plan's revision is above "Plan read") or couldn't read either revision.
+
 **You are given:** the plan path, the breakdown path, the breakdown's "Plan
 read" revision, the current unit's ID, and the IDs of the later units.
 
-Read `<common>/orchestration.md` section 4 first (`<common>` is the
+Read `<common>/subagent-rules.md` first (`<common>` is the
 `tims-common` folder next to this skill's folder).
 
 ## Do

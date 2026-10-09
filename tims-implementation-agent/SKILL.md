@@ -14,8 +14,9 @@ This is an *implementation* skill, not a planning skill. If no task card, plan
 or explicit instructions have been provided, ask for them before writing code.
 
 `<common>` below is `${CLAUDE_SKILL_DIR}/../tims-common` (or the path the
-handoff gives). Read `<common>/orchestration.md` before starting: its output
-budget and git rules apply to every mode.
+handoff gives). Before starting, read `<common>/subagent-rules.md` in
+delegated mode, or `<common>/orchestration.md` standalone: their output
+budget and git rules apply to you.
 
 ## Modes
 
@@ -23,8 +24,8 @@ budget and git rules apply to every mode.
 |---|---|---|
 | Input | A handoff naming one task card in a breakdown | A plan, spec or ticket |
 | Scope | Exactly that task; never start another | The plan's steps, in order |
-| Task Status | **Never written.** Everything for it goes in the RESULT; the orchestrator records it | A minimal doc from `tims-task-status init`, beside the plan, updated by you |
-| Talking to the engineer | Never: questions and Critical Decisions go in the RESULT, and you stop | Directly |
+| Task Status | **Never written.** Everything for it goes in the result file; the orchestrator applies it | A minimal doc from `tims-task-status init`, beside the plan, updated by you |
+| Talking to the engineer | Never: questions and Critical Decisions go in the result file, and you stop | Directly |
 | Validation | None. The task's work unit is validated later. Write **To validate** notes | A minimum compile check, then inline validation steps for the engineer |
 | Git | None | None |
 
@@ -158,15 +159,16 @@ If you identify adjacent improvements, refactors, technical debt, or
 architectural concerns, do not implement, partially implement or scaffold them,
 and don't modify unrelated files in preparation for them. Record each one as an
 Identified Improvement (description, expected benefits, risks/tradeoffs, why
-it's high impact): in the RESULT when delegated, through `tims-task-status`
+it's high impact): in the result file when delegated, through `tims-task-status`
 (`record` an improvement) when standalone. Refactors or improvements always
 require explicit engineer approval before implementation.
 
 ## Critical Decision Escalation
 
 1. Stop changing code.
-2. **Delegated:** put the decision in your RESULT (`task_status: blocked`,
-   `critical_decision:` the block below), and stop. The orchestrator marks the
+2. **Delegated:** put the decision in your result file (`Task status:
+   blocked`, the block below under `## Critical Decision`, its headings one
+   level down), say `critical_decision: yes` in the RESULT, and stop. The orchestrator marks the
    task `Blocked`, asks the engineer, and continues you with their decision.
    **Standalone:** mark the task `Blocked` through `tims-task-status` (`set`),
    naming the decision, and present it to the engineer.
@@ -214,11 +216,16 @@ Once the engineer decides:
 The Task Status document is owned by the `tims-task-status` skill.
 
 - **Delegated:** never write to it, and don't invoke `tims-task-status`. The
-  orchestrator has already marked your task `In Progress`. End with the RESULT
-  block from `<common>/orchestration.md`, plus the fields the handoff lists:
-  `task_status`, `files_modified`, `summary`, `to_validate`, `follow_up`,
-  `risks`, `improvements`, `critical_decision`. Validation is
-  `Deferred to <WU ID>`; the orchestrator writes it.
+  orchestrator has already marked your task `In Progress`. When you stop, for
+  any reason, write your **result file** to the path the handoff gives
+  (`<run>/results/<ID>.md`), in one Write, in exactly the format of
+  [`templates/result.md`](templates/result.md): task status, Files Modified,
+  Summary, To validate, Follow-up Concerns, Risks, Improvements, Critical
+  Decision, with Validation `Deferred to <WU ID>`. The orchestrator applies it
+  to the Task Status with a script, so keep its headings and bullet lines; if
+  you are continued later, rewrite the whole file. Then end with a short
+  RESULT block (`<common>/subagent-rules.md`) naming the file, with
+  `task_status` and `critical_decision: none | yes`.
 - **Standalone:** `init` a minimal doc from the plan if none exists. Set each
   step `In Progress` before changing code, log it when done, and set it `Done`
   once its compile check passes. Make every change through `tims-task-status`
@@ -237,7 +244,7 @@ yourself in order.
 
 **Delegated, do not validate.** Don't run compile checks, tests or other
 validation, and don't report the task as verified: its work unit's validation
-covers it. Instead, write **To validate** notes in the RESULT:
+covers it. Instead, write **To validate** notes in the result file:
 
 - what to check, and how (commands for the agent, exact steps for the
   engineer);

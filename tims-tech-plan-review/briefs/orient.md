@@ -7,7 +7,7 @@ nothing about the plan's quality.
 **You are given:** the paths you have (comprehensive plan and/or Tech Plan),
 and `<common>` (the `tims-common` folder).
 
-Read `<common>/orchestration.md` section 4 first.
+Read `<common>/subagent-rules.md` first.
 
 ## Do
 

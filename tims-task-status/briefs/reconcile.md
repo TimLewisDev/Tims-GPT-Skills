@@ -5,11 +5,16 @@ every discrepancy with a proposed correction. You change nothing: the
 orchestrator presents your findings to the engineer and applies what they
 confirm.
 
+`continue-preflight.sh` does these checks mechanically and is used first. You
+are the fallback, for a document it can't parse (it exited `2`), or when the
+caller asks for a reconcile by hand.
+
 **You are given:** the Task Status path, the Task Breakdown path (if any), the
 repo path, and `<scripts>` (the `tims-common/scripts` folder).
 
-Read `<scripts>/../orchestration.md` section 4 first, then the `reconcile`
-operation in `<skill>/SKILL.md` (`<skill>` is the folder above `briefs/`).
+Read `<scripts>/../subagent-rules.md` first, then only the `reconcile`
+operation in `<skill>/SKILL.md` (`<skill>` is the folder above `briefs/`):
+`` bash "<scripts>/md-section.sh" get "<skill>/SKILL.md" "### \`reconcile\`" ``.
 
 ## Do
 

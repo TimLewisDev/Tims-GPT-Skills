@@ -8,7 +8,7 @@ the plan don't support.
 path (`<Prefix> - Future Iterations.md` beside the plan), the template path,
 and `<common>`.
 
-Read `<common>/orchestration.md` section 4 first, then the template and the
+Read `<common>/subagent-rules.md` first, then the template and the
 notes.
 
 ## Do

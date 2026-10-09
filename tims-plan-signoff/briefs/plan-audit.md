@@ -7,7 +7,7 @@ fixes.
 **You are given:** the plan path, the Challenges doc path (if any), `<common>`,
 the repo path and `BASE_SHA`.
 
-Read `<common>/orchestration.md` section 4 first.
+Read `<common>/subagent-rules.md` first.
 
 ## Checks
 

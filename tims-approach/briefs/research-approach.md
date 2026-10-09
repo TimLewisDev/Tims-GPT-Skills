@@ -8,7 +8,7 @@ the engineer decide.
 text), the repo path, `BASE_SHA`, the output path
 `<draft>/research/approach-<x>.md`, and `<common>`.
 
-Read `<common>/orchestration.md` section 4 first, and
+Read `<common>/subagent-rules.md` first, and
 `<draft>/research/landscape.md` if it exists. Read code at `BASE_SHA` only.
 
 ## Write (one Write, at most 80 lines, ending with `<!-- tims:end -->`)

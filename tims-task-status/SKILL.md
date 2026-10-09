@@ -31,7 +31,7 @@ skill needs:
 
 | Caller | Uses |
 |---|---|
-| `tims-task-breakdown` | `init` (breakdown mode, through `briefs/init.md`); `summary` and `reconcile` (continue mode, the read-only part through `briefs/reconcile.md`); `set` at every task and unit state change; `log` from each implementation subagent's RESULT; `record` for decisions, risks, improvements, breakdown changes and work-unit validation runs |
+| `tims-task-breakdown` | `init` (breakdown mode, through `status-init.sh`; `briefs/init.md` is the fallback); `summary` and `reconcile` (continue mode, the read-only part through `briefs/reconcile.md`); `set` at every task and unit state change; `log` from each implementation subagent's result file; `record` for decisions, risks, improvements, breakdown changes and work-unit validation runs |
 | `tims-implementation-agent` | Standalone only: `init`, `set`, `log` and `record` for its own steps. In delegated mode it never calls this skill. |
 
 A caller that has already loaded this skill follows its rules for later
@@ -79,11 +79,27 @@ mid-response. So:
 - **One writer.** When `tims-task-breakdown` runs implementation subagents, it
   is the only writer of this document; subagents return their Step Log content
   instead of writing it.
-- **Compute the derived fields; don't work them out by hand.** After editing a
-  board row, run `bash "../tims-common/scripts/status-counts.sh" "<doc>"`
-  (relative to this skill's folder) and copy its State, Progress, Current Unit,
-  Current Task and Next into the header. Any line starting with `!` is a board
-  inconsistency: fix the derived ones; report the rest.
+- **Use the scripts for every routine write.** They are in
+  `../tims-common/scripts/` (relative to this skill's folder). Each makes the
+  targeted edit and recomputes the derived fields in one atomic write, keeps
+  the document's line endings, and prints one line per change, never content:
+
+  | Operation | Script |
+  |---|---|
+  | `set` | `status-set.sh <doc> <ID> "<Status>" [--note <text>]`: the board row, the unit or tasks it moves, the Step Log Status lines, the header and Resume Here |
+  | `log` | `status-log.sh <doc> <result file>`: the Step Log entry, its risks and improvements, then `set` (a delegated subagent's result file, or one you write in the same format) |
+  | `record` | `status-record.sh <doc> decision \| change \| risk \| improvement \| validation \| check …` |
+  | derived fields only | `status-set.sh <doc> --refresh` |
+  | `reconcile` (read-only part) | `continue-preflight.sh <doc> <breakdown>` |
+
+  Run each with `-h` for its options. A script that exits `2` changed nothing;
+  make that update by hand, following the rules here.
+- **Compute the derived fields; don't work them out by hand.** The scripts do
+  it through `status-counts.sh`. When you edit by hand, run
+  `bash "../tims-common/scripts/status-counts.sh" "<doc>"` and copy its State,
+  Progress, Current Unit, Current Task and Next into the header. Any line
+  starting with `!` is a board inconsistency: fix the derived ones; report the
+  rest.
 - **Boards at `init` come from the breakdown:**
   `bash "../tims-common/scripts/status-boards.sh" "<breakdown>"` prints both
   boards with every row `Todo`.
@@ -134,6 +150,8 @@ In **standalone** mode there are no work units: a task goes `Todo` →
   breakdown's Work Units and Task Map, and Resume Here points at the first unit.
   Name and place it per the breakdown (`<Prefix> - Task Status.md`), matching
   the sibling documents' header or tag block and link style.
+  `status-init.sh <breakdown> <status>` does all of this; use
+  `briefs/init.md` only if it can't read the breakdown.
 - **Standalone, from a plan** (called by `tims-implementation-agent` when there
   is no breakdown): write the minimal variant. Its tasks are the plan's steps,
   numbered as the plan numbers them. Put it beside the plan. Confirm the
@@ -180,10 +198,12 @@ Add one entry to the right section, then recompute and save:
   **attempt**, numbered 1, 2… per unit. An attempt covers all of the unit's
   checks, agent and engineer; a new attempt starts only when validation is
   re-run after a fix task or because earlier evidence went stale. Each block
-  has the run time, each check with passed / failed / pending and its evidence,
-  and an outcome: `Done`, `Failed → <fix task ID>`, or `Pending engineer
-  (checks <n>, …)` while the engineer's answers are outstanding. Update the
-  same block as answers arrive.
+  (`### Attempt <n>` under `## <WU> — <name>`) has the run time, one
+  `  - Check <n> (<text>) [<who>]: <result>. <evidence>` line per check
+  (passed / failed / pending / blocked / waived), and an outcome: `Done`,
+  `Failed` (with the fix task once there is one), or `Pending (checks <n>, …)`
+  while answers are outstanding. Update the same block as answers arrive
+  (`status-record.sh <doc> check <WU> <n> <result>` recomputes the outcome).
 
 ### `reconcile`
 
@@ -230,7 +250,7 @@ A short resume summary, from the header, Resume Here and the boards only:
 
 - `templates/task-status.md`: the full and standalone templates. Read it only
   for `init`.
-- `briefs/init.md`: `init` from a Task Breakdown, run by a subagent so the
-  caller never generates the whole document itself.
+- `briefs/init.md`: `init` from a Task Breakdown by a subagent, the fallback
+  when `status-init.sh` can't read the breakdown.
 - `briefs/reconcile.md`: the read-only part of `reconcile`, run by a subagent;
   it returns discrepancies and proposed corrections for the caller to present.

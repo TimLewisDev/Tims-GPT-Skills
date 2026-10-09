@@ -9,8 +9,10 @@ stack references that apply.
 
 Read first:
 
-1. `<skill>/../tims-common/orchestration.md`, section 4.
-2. `<skill>/SKILL.md`, sections **Review dimensions** and **General rules**.
+1. `<skill>/../tims-common/subagent-rules.md`.
+2. `<skill>/SKILL.md`, sections **Review dimensions** and **General rules**
+   only:
+   `bash "<skill>/../tims-common/scripts/md-section.sh" get "<skill>/SKILL.md" "## Review dimensions" "## General rules"`.
 3. The stack references you were given (`<skill>/references/<name>.md`).
 4. The repo's agent instructions and `.editorconfig` (only the parts about
    conventions and style), and `<work>/intent.md`.

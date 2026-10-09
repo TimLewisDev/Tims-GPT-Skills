@@ -8,7 +8,7 @@ the calling skill doesn't have to. You add, infer and reinterpret nothing.
 
 ## Do
 
-1. Read `<common>/orchestration.md` section 4.
+1. Read `<common>/subagent-rules.md`.
 2. Invoke the `tims-tech-plan` skill (or, if you can't, read its `SKILL.md` in
    the folder above this `briefs/` folder) and follow it in the given mode,
    with the comprehensive plan's path as its argument.

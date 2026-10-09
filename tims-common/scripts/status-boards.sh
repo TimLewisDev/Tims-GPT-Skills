@@ -46,6 +46,8 @@ l ~ /^#/ { sec = ""; next }
 		next }
 	if (sep) { sep = 0; next }
 	n = cells(l, c)
+	# A row with no ID is a divider ("| **MR 2** | | |"), not a unit or task.
+	if ((sec == "Work Units" ? c[u_id] : c[t_id]) == "") next
 	if (sec == "Work Units") { nu++; U[nu] = sprintf("| %s | %s | %s | %s | Todo | |", c[u_id], c[u_out], c[u_tasks], c[u_val]) }
 	else { nt++; T[nt] = c[t_id]; TT[nt] = c[t_task]; TE[nt] = c[t_exec]; TW[nt] = (t_wu ? c[t_wu] : ""); TD[nt] = c[t_dep] }
 }

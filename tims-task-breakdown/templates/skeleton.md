@@ -6,10 +6,14 @@ step per response. Card writers work from it, so it must hold every decision
 about slicing: nothing about task boundaries, files or check placement is left
 for them to decide.
 
+Scripts read it (`skeleton-tsv.sh`, `skeleton-check.sh`, `skeleton-render.sh`,
+`card-scaffold.sh`, `coverage.sh`), so keep these headings, the table columns
+(they're found by header text) and the `- WU1: <check> (<who>)` lines exactly.
+
 ```markdown
 # Skeleton: <Feature>
 
-- Plan: <path> · revision <N> · BASE_SHA <sha>
+- Plan: <absolute path> · revision <N> · BASE_SHA <sha>
 - Approved: no            <!-- set to the date when the engineer approves -->
 
 ## Tasks
@@ -28,10 +32,10 @@ for them to decide.
 | WU1 | <outcome> | T01–T03 | Agent | WU0 | T02 ∥ T03 |
 
 ## Done-when map
-| Item | First words | Unit | Why here (if not the step's own unit) |
-|---|---|---|---|
-| §1 #1 | <first ~8 words, verbatim> | WU1 | |
-| §2 #3 | <…> | WU3 | only observable once the scene exists (T09) |
+| Item | First words | Unit | Checked by | Why here (if not the step's own unit) |
+|---|---|---|---|---|
+| §1 #1 | <first ~8 words, verbatim> | WU1 | Agent | |
+| §2 #3 | <…> | WU3 | Engineer | only observable once the scene exists (T09) |
 
 ## Unit checks
 - WU1: <unit's own check, e.g. "the navigation assembly compiles"> (Agent)
@@ -42,14 +46,25 @@ Rules:
 
 - One plan step's rows per response. The units, the Done-when map and the unit
   checks take one response each.
+- Files: each path in backticks, after `new`, `change` or `delete`, separated
+  by `;`. Use the path the plan's Affected Files table uses, or a longer one
+  ending in it. An Engineer task with no files has `—`.
+- Tasks: a unit's tasks are consecutive, given as a list (`T01, T02`) or a
+  range (`T01–T03`, by the order of the Tasks rows).
 - "May run in parallel" lists only Agent tasks that the plan allows in parallel,
   whose Files lists don't overlap, and that don't depend on each other.
-- Every "Done when" item of every step appears exactly once in the map.
+- **Done-when items** are numbered exactly as `donewhen.sh <plan>` numbers
+  them, `§N #k`: each flat bullet of a step's "Done when" list is one item; a
+  bullet with sub-bullets is a heading, and each sub-bullet is an item, read as
+  "<parent text> <child text>". Every item appears exactly once in the map.
+- **Checked by** is who runs the check once the unit is built: Agent,
+  Engineer, or Agent + Engineer (the agent runs its part first).
 
 ## `manifest.txt`
 
-Written from the skeleton once the units are fixed; card writers fill the
-parts it names. One relative path per line, in document order:
+`skeleton-render.sh` writes it from the skeleton, with `parts/10-work-units.md`
+and `parts/20-task-map.md`; re-run it after every skeleton change. One
+relative path per line, in document order:
 
 ```
 parts/00-header.md
