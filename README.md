@@ -7,7 +7,8 @@ merge requests.
 
 Each skill is a `SKILL.md` file in its own folder, written for Claude Code and
 usable with other agents that read the same format (Codex, GitHub Copilot).
-They are instructions and document templates, not code.
+They are instructions and document templates, plus small bash scripts in
+`tims-common/scripts/` that do the routine copying and checking.
 
 ## The skills
 
@@ -222,6 +223,9 @@ sections of a `SKILL.md` their brief needs):
 Agents that can't spawn subagents do the same steps themselves, still one part
 per response.
 
+[`docs/script-workflow.md`](docs/script-workflow.md) is a one-page summary of
+which work moved into scripts, why, and what it changes for you.
+
 ### Repo rules come from the repo
 
 The skills don't assume a language or engine. How to build or compile-check,
@@ -370,13 +374,18 @@ time. It slices the design but never changes it.
   mode), or `/tims-task-breakdown continue <task status doc>` (continue mode;
   `resume` and `status` also work).
 - **Breakdown mode:** verifies every path and symbol the plan cites on its base
-  branch; drafts a skeleton (units, tasks, files, where each "Done when" check
-  lands) for you to approve; then has subagents write the self-contained task
-  cards, one unit each; audits coverage; assembles the documents.
-- **Continue mode:** reconciles the Task Status with the repo and flags plan
-  changes since the breakdown (both in subagents); confirms the next unit with
-  you once; runs each task in its own implementation subagent, back to back;
-  then validates the unit.
+  branch (a script, then batched subagents); drafts a skeleton (units, tasks,
+  files, where each "Done when" check lands and who checks it), checks it with
+  a script, and gives it to you to approve; scaffolds every unit block and
+  card from it, then has subagents fill in what needs judgement, one unit
+  each; runs the coverage audit as a script; assembles the documents and
+  creates the Task Status.
+- **Continue mode:** runs a pre-flight script that reconciles the Task Status
+  with the repo and flags plan changes since the breakdown (a subagent only if
+  the plan changed); confirms the next unit with you once; runs each task in
+  its own implementation subagent, back to back, applying each one's result
+  file with a script; then validates the unit: the agent checks from its
+  `checks` block, then your checklist inline in chat.
 - **Calls:** `tims-task-status` for every status change;
   `tims-implementation-agent` for each Agent task.
 - **Won't:** redesign the feature, edit the plan (it sends you to
@@ -391,6 +400,10 @@ can trust.
   consistency check and a reconcile with the repo. Usually called by other
   skills.
 - **Operations:** `init`, `set`, `log`, `record`, `reconcile`, `summary`.
+  Each routine one is a script (`status-init.sh`, `status-set.sh`,
+  `status-log.sh`, `status-record.sh`, `continue-preflight.sh`) that makes the
+  edit and recomputes the header in one atomic write; the skill's rules cover
+  the rest and the fallback when a script can't read a document.
 - **Key rules:** saves at every state change, including `In Progress` before
   any code changes; boards, header and *Resume Here* always agree; corrections
   found by reconcile are applied only after you confirm; nothing is deleted.
@@ -406,8 +419,10 @@ Implements exactly what it's given and escalates everything else.
 
 - **Run it:** called by `tims-task-breakdown` with one task card, or directly
   with a plan, spec or ticket (standalone).
-- **Via a breakdown:** one task only; no validation, but it leaves *To
-  validate* notes for the unit's checks.
+- **Via a breakdown:** one task only; no validation. It writes a result file
+  (files changed, summary, *To validate* notes for the unit's checks, risks,
+  improvements, any Critical Decision) that the coordinator applies to the
+  Task Status with a script.
 - **Standalone:** works the plan's steps in order, keeps a minimal Task Status,
   runs a compile check using the repo's method, and gives you inline
   validation steps.
@@ -447,6 +462,8 @@ A line-by-line review meant to stand in for a senior engineer's review.
   (asking for `model: sonnet` for mechanical work). Other agents may need
   equivalents, or do the subagents' work themselves.
 - **bash and git** for the scripts (Git Bash on Windows). No other runtime.
+- **Optional: a `SessionEnd` hook** to log each session's token use (see
+  [Token log](#token-log)).
 - **A Sonnet model your provider serves.** The `sonnet` alias resolves through
   `ANTHROPIC_DEFAULT_SONNET_MODEL`; on Bedrock or a gateway, set it to a model
   ID your account accepts if the default doesn't. If a Sonnet subagent fails
