@@ -5,11 +5,11 @@
 
 ## Added
 First set of skills covering the delivery workflow:
-- `tims-adversarial-plan`: adversarial planning that produces a Comprehensive Tech Plan.
-- `tims-tech-plan`: brief, human-readable plan rendered from the comprehensive plan.
-- `tims-tech-proposals`: decision-point options for human review.
-- `tims-tech-plan-review`: review and amendment of an existing plan.
-- `tims-task-breakdown`: plan broken into atomic tasks grouped into work units.
-- `tims-task-status`: the Task Status resume document.
-- `tims-implementation-agent`: implements one task with scope control.
-- `tims-mr-review`: GitLab MR review.
+- `tt-adversarial-plan`: adversarial planning that produces a Comprehensive Tech Plan.
+- `tt-tech-plan`: brief, human-readable plan rendered from the comprehensive plan.
+- `tt-tech-proposals`: decision-point options for human review.
+- `tt-tech-plan-review`: review and amendment of an existing plan.
+- `tt-task-breakdown`: plan broken into atomic tasks grouped into work units.
+- `tt-task-status`: the Task Status resume document.
+- `tt-implementation-agent`: implements one task with scope control.
+- `tt-mr-review`: GitLab MR review.

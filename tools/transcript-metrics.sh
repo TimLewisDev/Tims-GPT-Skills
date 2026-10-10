@@ -42,7 +42,7 @@ skills responses max_out out_gt8k max_ctx slow stalls other_err agent_calls
           --all, every session in range. A session already in the log has
           its row replaced (a resumed session grows), keeping its label
           unless --label is given, so re-running is safe. --match keeps only
-          sessions whose skills list matches the ERE (e.g. '(^|,)tims-').
+          sessions whose skills list matches the ERE (e.g. '(^|,)tt-').
           Times are UTC.
 
 Exit: 0 ok (for --record: at least one row added), 1 nothing to show or

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # record-session.sh: Claude Code SessionEnd hook. Records the ending session's
-# token use in the token log when it used a tims-* skill and logging has been
-# switched on (/tims-metrics on). Never fails or delays the session. Needs
+# token use in the token log when it used a tt-* skill and logging has been
+# switched on (/tt-metrics on). Never fails or delays the session. Needs
 # bash, sed and awk only.
 
 case "${1:-}" in
@@ -16,27 +16,27 @@ Install as a SessionEnd hook in ~/.claude/settings.json:
 Reads transcript_path from the hook input, then runs
 transcript-metrics.sh --record in the background and returns at once.
 
-Records only while the flag file exists: switch it with /tims-metrics on|off.
+Records only while the flag file exists: switch it with /tt-metrics on|off.
 
 Environment:
-  TIMS_METRICS        off | 0 | false | no: record nothing, flag or not
-  TIMS_METRICS_HOME   state directory (default: ~/.claude/tims-metrics)
-  TIMS_METRICS_LOG    the log to write (default: token-log.md in the state directory)
-  TIMS_METRICS_LABEL  label for the row (default: none)
-  TIMS_METRICS_MATCH  ERE the session's skills must match (default: (^|,)tims-)
+  TT_METRICS        off | 0 | false | no: record nothing, flag or not
+  TT_METRICS_HOME   state directory (default: ~/.claude/tt-metrics)
+  TT_METRICS_LOG    the log to write (default: token-log.md in the state directory)
+  TT_METRICS_LABEL  label for the row (default: none)
+  TT_METRICS_MATCH  ERE the session's skills must match (default: (^|,)tt-)
 
 Always exits 0.
 EOF
 		exit 0 ;;
 esac
 
-case "${TIMS_METRICS:-on}" in off | OFF | 0 | false | no) exit 0 ;; esac
+case "${TT_METRICS:-on}" in off | OFF | 0 | false | no) exit 0 ;; esac
 
 here=$(cd "$(dirname "$0")" && pwd) || exit 0
-home=${TIMS_METRICS_HOME:-${CLAUDE_CONFIG_DIR:-$HOME/.claude}/tims-metrics}
+home=${TT_METRICS_HOME:-${CLAUDE_CONFIG_DIR:-$HOME/.claude}/tt-metrics}
 [ -f "$home/enabled" ] || exit 0
-log=${TIMS_METRICS_LOG:-$home/token-log.md}
-match=${TIMS_METRICS_MATCH:-(^|,)tims-}
+log=${TT_METRICS_LOG:-$home/token-log.md}
+match=${TT_METRICS_MATCH:-(^|,)tt-}
 
 # The hook input is one JSON object; JSON escapes Windows backslashes as \\.
 # Any run of backslashes becomes one forward slash.
@@ -45,7 +45,7 @@ tp=$(printf '%s' "$input" | sed -n 's/.*"transcript_path"[[:space:]]*:[[:space:]
 [ -n "$tp" ] && [ -f "$tp" ] || exit 0
 
 args=(--record "$log" --match "$match")
-[ -n "${TIMS_METRICS_LABEL:-}" ] && args+=(--label "$TIMS_METRICS_LABEL")
+[ -n "${TT_METRICS_LABEL:-}" ] && args+=(--label "$TT_METRICS_LABEL")
 
 # Detached, so the session can exit while the transcript is read.
 nohup bash "$here/../transcript-metrics.sh" "${args[@]}" "$tp" </dev/null >/dev/null 2>&1 &

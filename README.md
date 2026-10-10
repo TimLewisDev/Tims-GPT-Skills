@@ -1,4 +1,4 @@
-# Tims-GPT-Skills
+# Tims AI Toolbox
 
 Skills for planning and building a feature with an AI coding agent while the
 engineer keeps control: every consequential decision is theirs, every plan
@@ -8,28 +8,28 @@ merge requests.
 Each skill is a `SKILL.md` file in its own folder, written for Claude Code and
 usable with other agents that read the same format (Codex, GitHub Copilot).
 They are instructions and document templates, plus small bash scripts in
-`tims-common/scripts/` that do the routine copying and checking.
+`tt-common/scripts/` that do the routine copying and checking.
 
 ## The skills
 
 | Skill | What it does |
 |---|---|
-| [`tims-familiarise`](tims-familiarise/SKILL.md) | Explores a part of the codebase with you, a question at a time, until you've pinned down what you actually care about. |
-| [`tims-familiarisation-doc`](tims-familiarisation-doc/SKILL.md) | Writes up only the part of that exploration you said you're interested in, as a readable doc. |
-| [`tims-adversarial-plan`](tims-adversarial-plan/SKILL.md) | Runs planning stage by stage, has an adversary challenge each stage, and gets you to a signed-off plan. |
-| [`tims-requirements`](tims-requirements/SKILL.md) | Planning stage 1: pins down what the feature must do. |
-| [`tims-scope`](tims-scope/SKILL.md) | Planning stage 2: what the feature is and isn't, and the hard constraints. |
-| [`tims-approach`](tims-approach/SKILL.md) | Planning stage 3: weighs candidate approaches against the repo and records the choice. |
-| [`tims-technical-design`](tims-technical-design/SKILL.md) | Planning stage 4: verifies repo facts, resolves critical decisions, outlines the steps. |
-| [`tims-plan-signoff`](tims-plan-signoff/SKILL.md) | Final stage: your sign-off, then the finished plan, Tech Plan and Future Iterations. |
-| [`tims-tech-proposals`](tims-tech-proposals/SKILL.md) | Lays out each decision's options side by side for review, and records what was chosen. |
-| [`tims-tech-plan`](tims-tech-plan/SKILL.md) | Writes a short, five-minute summary of the plan for reviewers. |
-| [`tims-tech-plan-review`](tims-tech-plan-review/SKILL.md) | Talks a written plan through with you, answers questions, and makes the changes you confirm. |
-| [`tims-task-breakdown`](tims-task-breakdown/SKILL.md) | Splits the plan into small tasks grouped into work units, then works through them one unit at a time. |
-| [`tims-task-status`](tims-task-status/SKILL.md) | Keeps the progress record that lets any new session pick up where the last one stopped. |
-| [`tims-implementation-agent`](tims-implementation-agent/SKILL.md) | Writes the code for one task (or a small plan), strictly within scope. |
-| [`tims-mr-review`](tims-mr-review/SKILL.md) | Reviews a GitLab merge request and posts only the comments you approve. |
-| [`tims-common`](tims-common/SKILL.md) | Not run directly: the shared rules for long runs and for planning, shared templates, and the helper scripts the other skills call. |
+| [`tt-familiarise`](tt-familiarise/SKILL.md) | Explores a part of the codebase with you, a question at a time, until you've pinned down what you actually care about. |
+| [`tt-familiarisation-doc`](tt-familiarisation-doc/SKILL.md) | Writes up only the part of that exploration you said you're interested in, as a readable doc. |
+| [`tt-adversarial-plan`](tt-adversarial-plan/SKILL.md) | Runs planning stage by stage, has an adversary challenge each stage, and gets you to a signed-off plan. |
+| [`tt-requirements`](tt-requirements/SKILL.md) | Planning stage 1: pins down what the feature must do. |
+| [`tt-scope`](tt-scope/SKILL.md) | Planning stage 2: what the feature is and isn't, and the hard constraints. |
+| [`tt-approach`](tt-approach/SKILL.md) | Planning stage 3: weighs candidate approaches against the repo and records the choice. |
+| [`tt-technical-design`](tt-technical-design/SKILL.md) | Planning stage 4: verifies repo facts, resolves critical decisions, outlines the steps. |
+| [`tt-plan-signoff`](tt-plan-signoff/SKILL.md) | Final stage: your sign-off, then the finished plan, Tech Plan and Future Iterations. |
+| [`tt-tech-proposals`](tt-tech-proposals/SKILL.md) | Lays out each decision's options side by side for review, and records what was chosen. |
+| [`tt-tech-plan`](tt-tech-plan/SKILL.md) | Writes a short, five-minute summary of the plan for reviewers. |
+| [`tt-tech-plan-review`](tt-tech-plan-review/SKILL.md) | Talks a written plan through with you, answers questions, and makes the changes you confirm. |
+| [`tt-task-breakdown`](tt-task-breakdown/SKILL.md) | Splits the plan into small tasks grouped into work units, then works through them one unit at a time. |
+| [`tt-task-status`](tt-task-status/SKILL.md) | Keeps the progress record that lets any new session pick up where the last one stopped. |
+| [`tt-implementation-agent`](tt-implementation-agent/SKILL.md) | Writes the code for one task (or a small plan), strictly within scope. |
+| [`tt-mr-review`](tt-mr-review/SKILL.md) | Reviews a GitLab merge request and posts only the comments you approve. |
+| [`tt-common`](tt-common/SKILL.md) | Not run directly: the shared rules for long runs and for planning, shared templates, and the helper scripts the other skills call. |
 
 ## How they fit together
 
@@ -37,47 +37,47 @@ They are instructions and document templates, plus small bash scripts in
 "I want to explore how X works"          Spec or ticket
   │                                        │
   ▼                                        │
-tims-familiarise ──► Focus Log             │
-tims-familiarisation-doc ──► Familiarisation
+tt-familiarise ──► Focus Log             │
+tt-familiarisation-doc ──► Familiarisation
   │                                        │
   ▼                                        ▼
-tims-adversarial-plan (orchestrator), one stage at a time:
-  ├─ tims-requirements       ┐ each writes into the draft
-  ├─ tims-scope              │ Comprehensive Tech Plan, with
-  ├─ tims-approach           │ decisions via tims-tech-proposals ──► Tech Proposals
-  ├─ tims-technical-design   ┘
+tt-adversarial-plan (orchestrator), one stage at a time:
+  ├─ tt-requirements       ┐ each writes into the draft
+  ├─ tt-scope              │ Comprehensive Tech Plan, with
+  ├─ tt-approach           │ decisions via tt-tech-proposals ──► Tech Proposals
+  ├─ tt-technical-design   ┘
   │    after every stage (and the whole plan): an adversary subagent ──► Challenges
   │    then a break point: carry on, or resume in a fresh session
-  └─ tims-plan-signoff, on your sign-off, writes:
+  └─ tt-plan-signoff, on your sign-off, writes:
        ├─► Comprehensive Tech Plan   (the authority)
        ├─► Future Iterations         (only if work was left out)
-       └─► tims-tech-plan ──────────► Tech Plan (brief summary for review)
+       └─► tt-tech-plan ──────────► Tech Plan (brief summary for review)
   │
   ▼
 You review the Tech Plan and Proposals
-  └─ tims-tech-plan-review: questions and changes, at any time
+  └─ tt-tech-plan-review: questions and changes, at any time
   │
   ▼
-tims-task-breakdown  (breakdown mode)
+tt-task-breakdown  (breakdown mode)
   ├─► Task Breakdown            (task cards, grouped into work units)
-  └─► tims-task-status ────────► Task Status (progress and resume point)
+  └─► tt-task-status ────────► Task Status (progress and resume point)
   │
   ▼
-tims-task-breakdown  (continue mode), one work unit at a time:
-  ├─ Agent tasks    ──► tims-implementation-agent
+tt-task-breakdown  (continue mode), one work unit at a time:
+  ├─ Agent tasks    ──► tt-implementation-agent
   ├─ Engineer tasks ──► a checklist for you
   └─ validate the unit, then stop and report
 
-tims-mr-review stands apart: run it on any open GitLab MR.
+tt-mr-review stands apart: run it on any open GitLab MR.
 ```
 
 In order:
 
-1. **Explore (optional).** `tims-familiarise` starts from a loose question,
+1. **Explore (optional).** `tt-familiarise` starts from a loose question,
    shows you the code a piece at a time and follows your lead until the focus
-   is clear. `tims-familiarisation-doc` writes up just that focus. The doc
+   is clear. `tt-familiarisation-doc` writes up just that focus. The doc
    stands on its own, and it's where planning starts.
-2. **Plan.** `tims-adversarial-plan` runs the stages in order. Each stage asks
+2. **Plan.** `tt-adversarial-plan` runs the stages in order. Each stage asks
    one question at a time and adds what you agree to the *Consensus Ledger* in
    the draft plan. Each choice between options becomes a proposal you can read
    before deciding. After each stage, an adversary that sees only the written
@@ -86,35 +86,35 @@ In order:
    session. Planning only finishes when you explicitly sign off the whole
    ledger.
 3. **Review.** Read the Tech Plan and Tech Proposals. Run
-   `tims-tech-plan-review` to walk through the plan, ask about it, or change it.
-4. **Break down.** `tims-task-breakdown` checks the plan against the repo,
+   `tt-tech-plan-review` to walk through the plan, ask about it, or change it.
+4. **Break down.** `tt-task-breakdown` checks the plan against the repo,
    proposes tasks and work units, and writes them once you approve.
 5. **Build and validate, one unit at a time.** Continue mode picks up from the
    Task Status, does the unit's tasks, then validates the whole unit. It stops
    after each unit.
 6. **Commit and publish yourself.** No skill stages, commits, pushes or creates
-   branches. Once there's an MR, `tims-mr-review` can review it.
+   branches. Once there's an MR, `tt-mr-review` can review it.
 
 ## Where to start
 
 | You want to… | Run |
 |---|---|
-| explore how something in the codebase works | `/tims-familiarise <what you want to explore>` |
-| write up an exploration | `/tims-familiarisation-doc [focus log]` |
-| plan a feature from an idea, exploration, spec or ticket | `/tims-adversarial-plan [description, familiarisation doc, spec or ticket]` |
-| carry on planning (next stage, or the pending challenge) | `/tims-adversarial-plan resume <draft plan>` |
-| work on one planning stage in its own session | `/tims-requirements`, `/tims-scope`, `/tims-approach`, `/tims-technical-design` or `/tims-plan-signoff` `<draft plan>` |
-| review, question or change a written plan | `/tims-tech-plan-review [tech plan] [comprehensive tech plan]` |
-| break a signed-off plan into tasks | `/tims-task-breakdown <comprehensive tech plan>` |
-| carry on building | `/tims-task-breakdown continue <task status doc>` |
-| see where things stand | `/tims-task-status <task status doc>` |
-| implement a small plan or ticket without a breakdown | `/tims-implementation-agent <plan, spec or ticket>` |
-| rebuild the brief Tech Plan | `/tims-tech-plan <comprehensive tech plan>` |
-| tidy a proposals doc, or create one for an existing plan | `/tims-tech-proposals <proposals doc or comprehensive tech plan>` |
-| review a GitLab MR | `/tims-mr-review [MR number or branch]` |
+| explore how something in the codebase works | `/tt-familiarise <what you want to explore>` |
+| write up an exploration | `/tt-familiarisation-doc [focus log]` |
+| plan a feature from an idea, exploration, spec or ticket | `/tt-adversarial-plan [description, familiarisation doc, spec or ticket]` |
+| carry on planning (next stage, or the pending challenge) | `/tt-adversarial-plan resume <draft plan>` |
+| work on one planning stage in its own session | `/tt-requirements`, `/tt-scope`, `/tt-approach`, `/tt-technical-design` or `/tt-plan-signoff` `<draft plan>` |
+| review, question or change a written plan | `/tt-tech-plan-review [tech plan] [comprehensive tech plan]` |
+| break a signed-off plan into tasks | `/tt-task-breakdown <comprehensive tech plan>` |
+| carry on building | `/tt-task-breakdown continue <task status doc>` |
+| see where things stand | `/tt-task-status <task status doc>` |
+| implement a small plan or ticket without a breakdown | `/tt-implementation-agent <plan, spec or ticket>` |
+| rebuild the brief Tech Plan | `/tt-tech-plan <comprehensive tech plan>` |
+| tidy a proposals doc, or create one for an existing plan | `/tt-tech-proposals <proposals doc or comprehensive tech plan>` |
+| review a GitLab MR | `/tt-mr-review [MR number or branch]` |
 
 `[…]` is optional and `<…>` is required. If you're new to these skills, start with
-`tims-adversarial-plan`; it offers to explore the code first when that helps.
+`tt-adversarial-plan`; it offers to explore the code first when that helps.
 
 ## Key ideas
 
@@ -127,14 +127,14 @@ elsewhere.
 
 | Document | File name | Written by | What it's for |
 |---|---|---|---|
-| Familiarisation | `<Prefix> - Familiarisation.md` | `tims-familiarisation-doc` | How the part of the code you care about works today, with open questions. Description only; where planning starts. |
-| Comprehensive Tech Plan | `<Prefix> - Comprehensive Tech Plan.md` | the planning stages, run by `tims-adversarial-plan`; changed only through `tims-tech-plan-review` once signed off | The authority: requirements, approach, scope, constraints, decisions, verified repo facts and step-by-step design. While it's a draft, its **Stages** table records where planning is. |
-| Tech Proposals | `<Prefix> - Tech Proposals.md` | `tims-tech-proposals` | Each decision's options, the recommendation, and the outcome. |
-| Challenges | `<Prefix> - Challenges.md` | `tims-adversarial-plan` | What each stage's adversary attacked, the evidence, and how you settled it. |
-| Tech Plan | `<Prefix> - Tech Plan.md` | `tims-tech-plan` | A brief view of the comprehensive plan. Adds nothing of its own. |
-| Future Iterations | `<Prefix> - Future Iterations.md` | `tims-plan-signoff` | Work that came up and was deliberately left out. |
-| Task Breakdown | `<Prefix> - Task Breakdown.md` | `tims-task-breakdown` | Task cards and work units, each with an *In plain English* summary for non-technical readers. |
-| Task Status | `<Prefix> - Task Status.md` | `tims-task-status` | Progress, logs, decisions and validation results. A new session reads this first. |
+| Familiarisation | `<Prefix> - Familiarisation.md` | `tt-familiarisation-doc` | How the part of the code you care about works today, with open questions. Description only; where planning starts. |
+| Comprehensive Tech Plan | `<Prefix> - Comprehensive Tech Plan.md` | the planning stages, run by `tt-adversarial-plan`; changed only through `tt-tech-plan-review` once signed off | The authority: requirements, approach, scope, constraints, decisions, verified repo facts and step-by-step design. While it's a draft, its **Stages** table records where planning is. |
+| Tech Proposals | `<Prefix> - Tech Proposals.md` | `tt-tech-proposals` | Each decision's options, the recommendation, and the outcome. |
+| Challenges | `<Prefix> - Challenges.md` | `tt-adversarial-plan` | What each stage's adversary attacked, the evidence, and how you settled it. |
+| Tech Plan | `<Prefix> - Tech Plan.md` | `tt-tech-plan` | A brief view of the comprehensive plan. Adds nothing of its own. |
+| Future Iterations | `<Prefix> - Future Iterations.md` | `tt-plan-signoff` | Work that came up and was deliberately left out. |
+| Task Breakdown | `<Prefix> - Task Breakdown.md` | `tt-task-breakdown` | Task cards and work units, each with an *In plain English* summary for non-technical readers. |
+| Task Status | `<Prefix> - Task Status.md` | `tt-task-status` | Progress, logs, decisions and validation results. A new session reads this first. |
 
 ### IDs and revisions
 
@@ -172,13 +172,13 @@ plan changes show up as drift.
 
 A single model response has a time limit (a few minutes, thinking included),
 and one ever-growing conversation gets slow. So the skills follow
-[`tims-common/orchestration.md`](tims-common/orchestration.md) (subagents read
+[`tt-common/orchestration.md`](tt-common/orchestration.md) (subagents read
 only its short subset,
-[`tims-common/subagent-rules.md`](tims-common/subagent-rules.md), and only the
+[`tt-common/subagent-rules.md`](tt-common/subagent-rules.md), and only the
 sections of a `SKILL.md` their brief needs):
 
 - **No response writes a whole document.** Large documents are built from part
-  files in a hidden draft folder beside them (`.tims/<Prefix> - <Doc>/`) and
+  files in a hidden draft folder beside them (`.tt/<Prefix> - <Doc>/`) and
   stitched together by a script. If a session stalls, re-running the skill (or
   saying "continue") picks up at the first missing part instead of starting
   again.
@@ -236,28 +236,28 @@ and records the answer.
 
 ## Skill reference
 
-### [`tims-familiarise`](tims-familiarise/SKILL.md): explore the code
+### [`tt-familiarise`](tt-familiarise/SKILL.md): explore the code
 
 A guide, not a planner: you start with a loose question, and it shows you the
 code a piece at a time until you've boiled it down to what you care about.
 
-- **Run it:** `/tims-familiarise <what you want to explore>`, e.g. "how
+- **Run it:** `/tt-familiarise <what you want to explore>`, e.g. "how
   notifications are sent when an order ships"; carry on later with
-  `/tims-familiarise resume <focus log>`.
+  `/tt-familiarise resume <focus log>`.
 - **How a session goes:** it asks why you're exploring (to change, debug,
   plan or learn), maps the area with read-only subagents, describes what it
   finds in plain words with `path:line` references and small diagrams, then
   asks which way to dig. Every few turns it plays back what it thinks you're
   really after and asks you to rate the topics: **Focus**, **Context** or
   **Parked**.
-- **Writes:** a Focus Log in `.tims/<Prefix> - Familiarisation/`, updated
+- **Writes:** a Focus Log in `.tt/<Prefix> - Familiarisation/`, updated
   every turn, so a fresh session can carry on or write it up.
 - **Won't:** design, recommend or plan, or decide for you what you're
   interested in.
 
-### [`tims-familiarisation-doc`](tims-familiarisation-doc/SKILL.md): write up the exploration
+### [`tt-familiarisation-doc`](tt-familiarisation-doc/SKILL.md): write up the exploration
 
-- **Run it:** `/tims-familiarisation-doc [focus log]`, straight after
+- **Run it:** `/tt-familiarisation-doc [focus log]`, straight after
   exploring or in a fresh session.
 - **Writes:** `<Prefix> - Familiarisation.md`, covering only your Focus
   topics and the context needed to read them: the question, the answer in
@@ -265,20 +265,20 @@ code a piece at a time until you've boiled it down to what you care about.
   imposes, gotchas, open questions (not agreed), and what was left out. Every
   reference is checked at the pinned commit.
 - **Then:** read it on its own, or plan from it with
-  `/tims-adversarial-plan <familiarisation doc>`.
+  `/tt-adversarial-plan <familiarisation doc>`.
 
-### [`tims-adversarial-plan`](tims-adversarial-plan/SKILL.md): plan a feature
+### [`tt-adversarial-plan`](tt-adversarial-plan/SKILL.md): plan a feature
 
 An orchestrator. It runs the planning stages in order, has an adversary
 challenge each one, and only finishes on your explicit sign-off.
 
-- **Run it:** `/tims-adversarial-plan [description, familiarisation doc, spec
-  or ticket]`; carry on with `/tims-adversarial-plan resume <draft plan>`.
-- **Stages:** familiarisation (optional) → `tims-requirements` →
-  `tims-scope` → `tims-approach` → `tims-technical-design` → a whole-plan
-  challenge → `tims-plan-signoff`. Each stage is a skill of its own that writes
+- **Run it:** `/tt-adversarial-plan [description, familiarisation doc, spec
+  or ticket]`; carry on with `/tt-adversarial-plan resume <draft plan>`.
+- **Stages:** familiarisation (optional) → `tt-requirements` →
+  `tt-scope` → `tt-approach` → `tt-technical-design` → a whole-plan
+  challenge → `tt-plan-signoff`. Each stage is a skill of its own that writes
   its Ledger sections into the draft plan. Shared rules live in
-  [`tims-common/planning-protocol.md`](tims-common/planning-protocol.md).
+  [`tt-common/planning-protocol.md`](tt-common/planning-protocol.md).
 - **The adversary:** after each stage, a subagent that sees only the written
   documents and the code attacks that stage's assumptions, using the stage's
   own `challenge-lens.md`. Every challenge is put to you: accept and change,
@@ -300,20 +300,20 @@ challenge each one, and only finishes on your explicit sign-off.
 
 ### The planning stages
 
-Normally run by `tims-adversarial-plan`. Each can also be run on its own with
+Normally run by `tt-adversarial-plan`. Each can also be run on its own with
 the draft plan's path, to work on one stage in a session of its own. It then
-ends by pointing you to `/tims-adversarial-plan resume <plan>`, so that the
+ends by pointing you to `/tt-adversarial-plan resume <plan>`, so that the
 stage still gets challenged.
 
 | Stage | Settles | Notes |
 |---|---|---|
-| [`tims-requirements`](tims-requirements/SKILL.md) | `R`: what the feature must do | Probes with hypotheticals; builds on the Familiarisation doc's description and open questions; maps the repo in the background if there's no Familiarisation doc. |
-| [`tims-scope`](tims-scope/SKILL.md) | `S`, `C`: what it is and isn't; hard constraints | Seeds non-goals from what the exploration left out, and constraints from the repo's rules; records excluded work for Future Iterations. |
-| [`tims-approach`](tims-approach/SKILL.md) | `A`, Rejected Alternatives | At least two candidates, each researched against the repo by a subagent; the choice is a proposal you decide. |
-| [`tims-technical-design`](tims-technical-design/SKILL.md) | Repo Facts, `CD`, `NB`, step outline | Verifies every claim at the pinned commit; hunts critical decisions; outlines the steps in dependency order. |
-| [`tims-plan-signoff`](tims-plan-signoff/SKILL.md) | sign-off, finished plan set | The termination gate, then the full steps, audits, Revision 1, Tech Plan and Future Iterations. |
+| [`tt-requirements`](tt-requirements/SKILL.md) | `R`: what the feature must do | Probes with hypotheticals; builds on the Familiarisation doc's description and open questions; maps the repo in the background if there's no Familiarisation doc. |
+| [`tt-scope`](tt-scope/SKILL.md) | `S`, `C`: what it is and isn't; hard constraints | Seeds non-goals from what the exploration left out, and constraints from the repo's rules; records excluded work for Future Iterations. |
+| [`tt-approach`](tt-approach/SKILL.md) | `A`, Rejected Alternatives | At least two candidates, each researched against the repo by a subagent; the choice is a proposal you decide. |
+| [`tt-technical-design`](tt-technical-design/SKILL.md) | Repo Facts, `CD`, `NB`, step outline | Verifies every claim at the pinned commit; hunts critical decisions; outlines the steps in dependency order. |
+| [`tt-plan-signoff`](tt-plan-signoff/SKILL.md) | sign-off, finished plan set | The termination gate, then the full steps, audits, Revision 1, Tech Plan and Future Iterations. |
 
-### [`tims-tech-proposals`](tims-tech-proposals/SKILL.md): present decisions
+### [`tt-tech-proposals`](tt-tech-proposals/SKILL.md): present decisions
 
 Makes each decision easy to review later without the conversation that
 produced it: the question, a side-by-side table, each option under the same
@@ -328,27 +328,27 @@ headings, the recommendation, and the decision.
   skill only arranges them; proposals are never deleted, and reopening a
   decided one creates a new proposal that supersedes it.
 - **Won't:** invent options, benefits or risks; change plan content (it
-  reports mismatches to `tims-tech-plan-review`).
+  reports mismatches to `tt-tech-plan-review`).
 
-### [`tims-tech-plan`](tims-tech-plan/SKILL.md): summarise the plan
+### [`tt-tech-plan`](tt-tech-plan/SKILL.md): summarise the plan
 
 A renderer, not a planner: it turns the comprehensive plan into a five-minute
 read (about 60–120 lines, no code blocks).
 
-- **Run it:** `/tims-tech-plan <comprehensive tech plan>`. Usually called by
+- **Run it:** `/tt-tech-plan <comprehensive tech plan>`. Usually called by
   other skills.
 - **Modes:** *Write* (new), *Regenerate* (full rewrite), *Update* (only the
   lines citing changed IDs).
 - **Key rules:** every line cites its IDs; records `Mirrors revision`; anything
   missing from the plan is reported, not patched into the summary.
 - **Won't:** add, infer or reinterpret anything. Given a spec or ticket, it
-  points you to `tims-adversarial-plan`.
+  points you to `tt-adversarial-plan`.
 
-### [`tims-tech-plan-review`](tims-tech-plan-review/SKILL.md): review and change a plan
+### [`tt-tech-plan-review`](tt-tech-plan-review/SKILL.md): review and change a plan
 
 A conversational review partner, and the only way a written plan changes.
 
-- **Run it:** `/tims-tech-plan-review [tech plan] [comprehensive tech plan]`.
+- **Run it:** `/tt-tech-plan-review [tech plan] [comprehensive tech plan]`.
   Either order works; one path is enough if it links the other; with none, it
   asks.
 - **How a session goes:** it reads the whole plan set (and any breakdown,
@@ -363,15 +363,15 @@ A conversational review partner, and the only way a written plan changes.
   confirming a `Default applied` proposal records the decision without a new
   revision; switching a decision's option goes through a proposal.
 - **Won't:** edit the Task Breakdown or Task Status. Changes show up as drift
-  the next time `tims-task-breakdown` continues.
+  the next time `tt-task-breakdown` continues.
 
-### [`tims-task-breakdown`](tims-task-breakdown/SKILL.md): slice and deliver
+### [`tt-task-breakdown`](tt-task-breakdown/SKILL.md): slice and deliver
 
 Turns the plan into tasks and work units, then drives the build one unit at a
 time. It slices the design but never changes it.
 
-- **Run it:** `/tims-task-breakdown <comprehensive tech plan>` (breakdown
-  mode), or `/tims-task-breakdown continue <task status doc>` (continue mode;
+- **Run it:** `/tt-task-breakdown <comprehensive tech plan>` (breakdown
+  mode), or `/tt-task-breakdown continue <task status doc>` (continue mode;
   `resume` and `status` also work).
 - **Breakdown mode:** verifies every path and symbol the plan cites on its base
   branch (a script, then batched subagents); drafts a skeleton (units, tasks,
@@ -386,17 +386,17 @@ time. It slices the design but never changes it.
   its own implementation subagent, back to back, applying each one's result
   file with a script; then validates the unit: the agent checks from its
   `checks` block, then your checklist inline in chat.
-- **Calls:** `tims-task-status` for every status change;
-  `tims-implementation-agent` for each Agent task.
+- **Calls:** `tt-task-status` for every status change;
+  `tt-implementation-agent` for each Agent task.
 - **Won't:** redesign the feature, edit the plan (it sends you to
-  `tims-tech-plan-review`), or offer to commit.
+  `tt-tech-plan-review`), or offer to commit.
 
-### [`tims-task-status`](tims-task-status/SKILL.md): keep the resume point
+### [`tt-task-status`](tt-task-status/SKILL.md): keep the resume point
 
 Owns every write to the Task Status doc, so it stays something a fresh session
 can trust.
 
-- **Run it:** `/tims-task-status <task status doc>` for a summary, a
+- **Run it:** `/tt-task-status <task status doc>` for a summary, a
   consistency check and a reconcile with the repo. Usually called by other
   skills.
 - **Operations:** `init`, `set`, `log`, `record`, `reconcile`, `summary`.
@@ -407,17 +407,17 @@ can trust.
 - **Key rules:** saves at every state change, including `In Progress` before
   any code changes; boards, header and *Resume Here* always agree; corrections
   found by reconcile are applied only after you confirm; nothing is deleted.
-- **Standalone mode:** when `tims-implementation-agent` works from a plan with
+- **Standalone mode:** when `tt-implementation-agent` works from a plan with
   no breakdown, the doc has no work units and a task is `Done` once its
   compile check passes.
 - **Won't:** check for plan drift (that's the breakdown's job), or stage,
   commit, push or branch.
 
-### [`tims-implementation-agent`](tims-implementation-agent/SKILL.md): write the code
+### [`tt-implementation-agent`](tt-implementation-agent/SKILL.md): write the code
 
 Implements exactly what it's given and escalates everything else.
 
-- **Run it:** called by `tims-task-breakdown` with one task card, or directly
+- **Run it:** called by `tt-task-breakdown` with one task card, or directly
   with a plan, spec or ticket (standalone).
 - **Via a breakdown:** one task only; no validation. It writes a result file
   (files changed, summary, *To validate* notes for the unit's checks, risks,
@@ -435,11 +435,11 @@ Implements exactly what it's given and escalates everything else.
 - **Won't:** expand scope, refactor nearby code, add dependencies, or touch
   git.
 
-### [`tims-mr-review`](tims-mr-review/SKILL.md): review a GitLab MR
+### [`tt-mr-review`](tt-mr-review/SKILL.md): review a GitLab MR
 
 A line-by-line review meant to stand in for a senior engineer's review.
 
-- **Run it:** `/tims-mr-review [MR number or branch]`. With no argument, it
+- **Run it:** `/tt-mr-review [MR number or branch]`. With no argument, it
   uses the MR for the current branch.
 - **Needs:** `glab` (authenticated) or a GitLab MCP server; ideally the repo
   checked out, otherwise it reviews from the diff alone.
@@ -472,7 +472,7 @@ A line-by-line review meant to stand in for a senior engineer's review.
   after a `git fetch`, not in the working tree.
 - **Agent instructions in the repo** (`AGENTS.md`, `CLAUDE.md` or equivalent)
   for build checks and tool-managed files. Without them, the skills ask you.
-- **For `tims-mr-review`:** GitLab, with `glab` or a GitLab MCP server. An
+- **For `tt-mr-review`:** GitLab, with `glab` or a GitLab MCP server. An
   issue-tracker integration is optional and used to read the linked issue.
 
 ## Setup (Claude Code)
@@ -483,22 +483,22 @@ Clone the repo anywhere, then link each skill folder into `~/.claude/skills`:
 
 ```powershell
 # Windows (PowerShell): directory junctions, no admin rights needed
-Get-ChildItem <clone path> -Directory -Filter "tims-*" | ForEach-Object {
+Get-ChildItem <clone path> -Directory -Filter "tt-*" | ForEach-Object {
   New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\$($_.Name)" -Target $_.FullName
 }
 ```
 
 ```sh
 # macOS / Linux
-for d in <clone path>/tims-*/; do ln -s "${d%/}" ~/.claude/skills/; done
+for d in <clone path>/tt-*/; do ln -s "${d%/}" ~/.claude/skills/; done
 ```
 
 A `git pull` in the clone updates every skill, and edits made through
 `~/.claude/skills` show up as changes in the clone. Restart Claude Code to pick
 up new skills.
 
-`tims-common` must be linked too: the other skills find their scripts at
-`../tims-common/` from their own folder. When a new skill folder appears after
+`tt-common` must be linked too: the other skills find their scripts at
+`../tt-common/` from their own folder. When a new skill folder appears after
 a pull, link it the same way.
 
 ### Testing the scripts
@@ -544,28 +544,28 @@ Claude Code's transcript clean-up. Recording a session again replaces its row.
 
 ```sh
 bash tools/transcript-metrics.sh --record tools/metrics/token-log.md --all \
-  --since 2026-10-06 --match '(^|,)tims-' --label "baseline" ~/.claude/projects/<project>
+  --since 2026-10-06 --match '(^|,)tt-' --label "baseline" ~/.claude/projects/<project>
 ```
 
-To record every session that uses a `tims-*` skill automatically, turn on
-logging with the [`tims-metrics`](tims-metrics/SKILL.md) skill (link it into
+To record every session that uses a `tt-*` skill automatically, turn on
+logging with the [`tt-metrics`](tt-metrics/SKILL.md) skill (link it into
 `~/.claude/skills` like the others):
 
 ```
-/tims-metrics on        # once per machine; persists across sessions
-/tims-metrics status
-/tims-metrics report --last 10
-/tims-metrics off
+/tt-metrics on        # once per machine; persists across sessions
+/tt-metrics status
+/tt-metrics report --last 10
+/tt-metrics off
 ```
 
-`on` creates a flag file at `~/.claude/tims-metrics/enabled` and, if it is
+`on` creates a flag file at `~/.claude/tt-metrics/enabled` and, if it is
 missing, adds the
 [`tools/metrics/record-session.sh`](tools/metrics/record-session.sh)
 `SessionEnd` hook to `~/.claude/settings.json` (it shows you the entry first;
 it applies from the next session). `off` removes the flag and leaves the hook,
-which then does nothing. Rows go to `~/.claude/tims-metrics/token-log.md`.
-`TIMS_METRICS=off` overrides the flag, `TIMS_METRICS_LABEL` labels the rows,
-`TIMS_METRICS_HOME` moves the state directory and `TIMS_METRICS_LOG` the log. A
+which then does nothing. Rows go to `~/.claude/tt-metrics/token-log.md`.
+`TT_METRICS=off` overrides the flag, `TT_METRICS_LABEL` labels the rows,
+`TT_METRICS_HOME` moves the state directory and `TT_METRICS_LOG` the log. A
 session that ends with Claude Code being killed isn't recorded;
 `--record --all` picks it up later.
 

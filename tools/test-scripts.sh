@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# test-scripts.sh: smoke tests for the tims-common status and continue-mode
+# test-scripts.sh: smoke tests for the tt-common status and continue-mode
 # scripts, run against tools/fixtures/demo in a throwaway git repo. Needs bash,
 # awk and git only. Prints one line per check and a count; exit 1 on failure.
 set -u
 
 root=$(cd "$(dirname "$0")/.." && pwd)
-S="$root/tims-common/scripts"
+S="$root/tt-common/scripts"
 F="$root/tools/fixtures/demo"
 T=$(mktemp -d)
 trap 'rm -rf "$T"' EXIT
@@ -183,7 +183,7 @@ expect "scaffold keeps existing parts" 0 bash "$S/card-scaffold.sh" "$D" WU1
 has "skipped" "$T/out" "skipped (exists)"
 expect "coverage with markers left" 1 bash "$S/coverage.sh" "$D"
 has "fill markers reported" "$T/out" "fill	"
-for f in "$D"/parts/3*.md; do sed -i 's/<!-- fill: [^>]*-->/Filled in./g' "$f"; echo '<!-- tims:end -->' >>"$f"; done
+for f in "$D"/parts/3*.md; do sed -i 's/<!-- fill: [^>]*-->/Filled in./g' "$f"; echo '<!-- tt:end -->' >>"$f"; done
 sed -i '/^Filled in\.$/d' "$D"/parts/30-*.md
 expect "coverage once filled" 0 bash "$S/coverage.sh" "$D"
 has "coverage part" "$D/parts/80-coverage.md" "| §1 | T01, T02 | WU1 |"

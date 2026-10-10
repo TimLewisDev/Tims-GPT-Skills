@@ -17,10 +17,10 @@ checking, and files on disk carry the results between them.**
 
 | Phase | Change | What it's for |
 |---|---|---|
-| 0. Measure | `tools/transcript-metrics.sh --tokens`, and a hook that logs every `tims-*` session to `tools/metrics/token-log.md` | See what a run costs, before and after a change |
+| 0. Measure | `tools/transcript-metrics.sh --tokens`, and a hook that logs every `tt-*` session to `tools/metrics/token-log.md` | See what a run costs, before and after a change |
 | 1. Continue mode | `status-set.sh`, `status-log.sh` and `status-record.sh` write the Task Status. `continue-preflight.sh` replaces the reconcile and plan-drift subagents. `run-checks.sh` runs a unit's checks. `validation-checklist.sh` drafts your checklist. Implementation subagents write a result file. | No re-typed reports, and no subagents just to compare files or run commands |
 | 2. Breakdown mode | `donewhen.sh`, `skeleton-check.sh`, `skeleton-render.sh`, `card-scaffold.sh`, `coverage.sh` and `status-init.sh`. Verification subagents are batched. | Card writers fill in only the parts that need thought; checks and tables come from scripts |
-| 3. Smaller reads | Subagents read `tims-common/subagent-rules.md` (2k) instead of `orchestration.md` (5k), and only the `SKILL.md` sections they need | Every subagent starts smaller |
+| 3. Smaller reads | Subagents read `tt-common/subagent-rules.md` (2k) instead of `orchestration.md` (5k), and only the `SKILL.md` sections they need | Every subagent starts smaller |
 
 ## Why it's better for us
 
@@ -38,27 +38,27 @@ checking, and files on disk carry the results between them.**
 
 Nothing changes in how you start the skills:
 
-1. **Plan:** `/tims-adversarial-plan` as before.
-2. **Break down:** `/tims-task-breakdown <comprehensive tech plan>`. You review
+1. **Plan:** `/tt-adversarial-plan` as before.
+2. **Break down:** `/tt-task-breakdown <comprehensive tech plan>`. You review
    and approve the skeleton as before. The skill now checks it with a script
    before showing you, and the cards come from a scaffold.
-3. **Build:** `/tims-task-breakdown continue <task status>`. The pre-flight
+3. **Build:** `/tt-task-breakdown continue <task status>`. The pre-flight
    runs first, without subagents. Then come the tasks, then the unit's checks,
    then your checklist in chat. Answer each check as before; the skill records
    it.
 4. **Measure.** Once the `SessionEnd` hook is in your user settings (see
-   the README's Token log section), every session that uses a `tims-*` skill
+   the README's Token log section), every session that uses a `tt-*` skill
    adds a row to `tools/metrics/token-log.md` when it ends. End it with
    `/exit`; a killed window may not record. To label the run:
-   - from Git Bash, start with `TIMS_METRICS_LABEL="<what you're testing>" claude`;
-     from PowerShell, `$env:TIMS_METRICS_LABEL = "<…>"; claude`;
+   - from Git Bash, start with `TT_METRICS_LABEL="<what you're testing>" claude`;
+     from PowerShell, `$env:TT_METRICS_LABEL = "<…>"; claude`;
    - or, from anywhere, label it afterwards (this also records a session the
      hook missed):
      `bash tools/transcript-metrics.sh --record tools/metrics/token-log.md --session <id> --label "<…>" ~/.claude/projects/<project>`.
      `--tokens --since <date>` lists recent sessions and their IDs.
 
    For one session's breakdown by subagent, run `--detail <id>`. To stop
-   logging, set `TIMS_METRICS=off` the same way, or remove the hook.
+   logging, set `TT_METRICS=off` the same way, or remove the hook.
 
 Two things are new for you to know:
 

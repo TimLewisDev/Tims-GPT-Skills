@@ -5,4 +5,4 @@
 
 ## Changed
 - `README.md` rewritten.
-- Wording and behaviour tweaks across all eight skills (largest in `tims-task-breakdown` and `tims-tech-plan-review`).
+- Wording and behaviour tweaks across all eight skills (largest in `tt-task-breakdown` and `tt-tech-plan-review`).

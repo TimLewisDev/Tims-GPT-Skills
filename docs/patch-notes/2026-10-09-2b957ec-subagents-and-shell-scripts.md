@@ -4,9 +4,9 @@
 - **Date:** 2026-10-09
 
 ## Added
-- `tims-common/subagent-rules.md`.
+- `tt-common/subagent-rules.md`.
 - Scripts replacing token-heavy repetitive steps: `status-init/log/record/set.sh`, `skeleton-check/render/tsv.sh`, `card-scaffold.sh`, `continue-preflight.sh`, `coverage.sh`, `donewhen.sh`, `run-checks.sh`, `validation-checklist.sh`.
-- `tims-implementation-agent/templates/result.md`.
+- `tt-implementation-agent/templates/result.md`.
 - `tools/test-scripts.sh`, demo fixtures under `tools/fixtures/`, `tools/metrics/record-session.sh`.
 
 ## Changed
